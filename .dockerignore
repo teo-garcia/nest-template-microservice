@@ -1,0 +1,64 @@
+# Node
+node_modules
+npm-debug.log
+pnpm-debug.log
+yarn-error.log
+
+# Build output
+dist
+build
+.next
+out
+
+# Tests
+coverage
+.nyc_output
+**/*.spec.ts
+**/*.e2e-spec.ts
+test
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+
+# Docs
+docs
+*.md
+!README.md
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+
+# Misc
+.editorconfig
+.prettierrc
+.eslintrc.js
+eslint.config.mjs
+.prettierignore
+commitlint.config.js
+
+# Temp files
+.temp
+.tmp
+*.pid
+*.seed
+*.pid.lock
+

@@ -1,0 +1,38 @@
+// Prisma Schema (Optional)
+//
+// This file is optional for microservices. Not all microservices need their own database.
+// Some are stateless, some share a database, and some have their own isolated database.
+//
+// To enable database support:
+// 1. Set DATABASE_ENABLED=true in your environment
+// 2. Provide DATABASE_URL connection string
+// 3. Run: pnpm db:generate && pnpm db:migrate
+//
+// To disable:
+// - Simply don't set DATABASE_ENABLED or set it to false
+// - The service will work without Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example model (you can remove this and add your own)
+model Order {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int
+  price     Float
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}

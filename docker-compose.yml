@@ -1,0 +1,131 @@
+services:
+  # PostgreSQL Database (Optional - only if DATABASE_ENABLED=true)
+  db:
+    image: postgres:15-alpine
+    container_name: nest_microservice_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      POSTGRES_DB: ${DATABASE_NAME:-nest_microservice}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - microservice-network
+    profiles:
+      - with-db # Only start if --profile with-db is used
+
+  # Redis (Required for messaging)
+  redis:
+    image: redis:alpine
+    container_name: nest_microservice_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - microservice-network
+
+  # Microservice Application
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: nest_microservice_app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      SERVICE_NAME: ${SERVICE_NAME:-microservice}
+      PORT: 3000
+      API_PREFIX: api
+
+      # Database config (optional)
+      DATABASE_ENABLED: ${DATABASE_ENABLED:-false}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DATABASE_USER:-postgres}:${DATABASE_PASSWORD:-postgres}@db:5432/${DATABASE_NAME:-nest_microservice}?schema=public}
+
+      # Redis config (required)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-micro:}
+
+      # Features
+      ENABLE_MESSAGING: ${ENABLE_MESSAGING:-true}
+      METRICS_ENABLED: ${METRICS_ENABLED:-true}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      # Mount source for hot reload
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/health/live', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    networks:
+      - microservice-network
+
+  # Redis Commander (Optional - for Redis visualization)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: nest_microservice_redis_ui
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      ${REDIS_PASSWORD:+REDIS_PASSWORD: ${REDIS_PASSWORD}}
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
+    depends_on:
+      - redis
+    networks:
+      - microservice-network
+    profiles:
+      - with-ui # Only start if --profile with-ui is used
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  microservice-network:
+    driver: bridge
+# Usage:
+# Basic (without database):
+#   docker-compose up
+#
+# With database:
+#   docker-compose --profile with-db up
+#
+# With UI tools:
+#   docker-compose --profile with-db --profile with-ui up
