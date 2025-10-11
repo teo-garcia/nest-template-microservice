@@ -114,3 +114,4 @@ export class RedisService implements OnModuleDestroy {
     this.logger.log('Redis connection closed')
   }
 }
+

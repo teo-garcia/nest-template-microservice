@@ -112,3 +112,4 @@ export function validate(config: Record<string, unknown>) {
 
   return validatedConfig
 }
+

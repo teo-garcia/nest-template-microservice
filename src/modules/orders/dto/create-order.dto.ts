@@ -23,3 +23,4 @@ export class CreateOrderDto {
   @IsPositive()
   price: number
 }
+

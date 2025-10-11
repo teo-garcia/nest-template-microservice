@@ -36,3 +36,4 @@ model Order {
   @@index([status])
   @@map("orders")
 }
+

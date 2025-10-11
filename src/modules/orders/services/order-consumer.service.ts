@@ -115,3 +115,4 @@ export class OrderConsumerService implements OnModuleInit {
     this.logger.debug('Inventory details:', JSON.stringify(message))
   }
 }
+

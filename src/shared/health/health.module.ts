@@ -22,3 +22,4 @@ import { RedisHealthIndicator } from './redis.health'
   providers: [RedisHealthIndicator],
 })
 export class HealthModule {}
+

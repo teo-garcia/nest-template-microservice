@@ -22,3 +22,4 @@ import { OrderConsumerService, OrdersService } from './services'
   exports: [OrdersService],
 })
 export class OrdersModule {}
+

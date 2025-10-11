@@ -21,3 +21,4 @@ import { RedisService } from './redis.service'
   exports: [RedisService, MessageProducerService, MessageConsumerService],
 })
 export class MessagingModule {}
+

@@ -11,29 +11,11 @@ Production-ready NestJS microservice with Redis Streams messaging, health checks
 
 ## Installation
 
-1. Get the template:
-
 ```bash
 npx degit teo-garcia/templates/nest-template-microservice my-service
 cd my-service
-```
-
-2. Install dependencies:
-
-```bash
 pnpm install
-```
-
-3. Configure environment:
-
-```bash
 cp .env.example .env
-# Edit .env with your settings
-```
-
-4. Start services:
-
-```bash
 docker-compose up -d
 pnpm start:dev
 ```
@@ -66,49 +48,6 @@ pnpm db:generate    # Generate Prisma client (if using DB)
 pnpm db:migrate     # Run database migrations (if using DB)
 ```
 
-## Docker
-
-```bash
-# Development
-docker-compose up
-
-# With optional database
-docker-compose --profile with-db up
-
-# Production build
-docker build -f docker/Dockerfile -t my-service .
-docker run -p 3000:3000 my-service
-```
-
-## Project Structure
-
-```
-src/
-├── config/              # Service configuration
-├── shared/
-│   ├── filters/         # Global exception handling
-│   ├── health/          # Health checks (DB, Redis)
-│   ├── interceptors/    # Request/response transformation
-│   ├── logger/          # Structured logging
-│   ├── messaging/       # Redis Streams pub/sub
-│   ├── metrics/         # Prometheus metrics
-│   └── prisma/          # Database access (optional)
-└── modules/
-    └── orders/          # Example domain module
-        ├── controllers/ # REST API
-        ├── services/    # Business logic & event publishing
-        └── dto/         # Data transfer objects
-```
-
-## Endpoints
-
-- `GET /health` - Comprehensive health status
-- `GET /health/live` - Liveness probe (Kubernetes)
-- `GET /health/ready` - Readiness probe (checks Redis, optional DB)
-- `GET /metrics` - Prometheus metrics
-- `POST /api/orders` - Example: Create order (publishes event)
-- `GET /api/orders` - Example: List orders
-
 ## Messaging
 
 ### Publishing Events
@@ -133,45 +72,22 @@ await this.messageConsumer.subscribe(
 )
 ```
 
-### Features
+## Project Structure
 
-- **Consumer Groups** - Load balancing across service instances
-- **Auto-retry** - 3 attempts with exponential backoff
-- **Dead Letter Queue** - Failed messages stored in `{stream}:dlq`
-- **Pending Recovery** - Processes unacknowledged messages on startup
-
-## Configuration
-
-Key environment variables:
-
-```env
-SERVICE_NAME=my-service
-PORT=3000
-
-# Redis (Required)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-
-# Database (Optional)
-DATABASE_ENABLED=false
-DATABASE_URL=postgresql://...
-
-# Features
-ENABLE_MESSAGING=true
-METRICS_ENABLED=true
 ```
-
-## Deployment
-
-This template is cloud-agnostic and works with:
-
-- **AWS** - ECS, EKS, App Runner
-- **GCP** - Cloud Run, GKE
-- **Azure** - Container Instances, AKS
-- **Kubernetes** - Any cluster
-
-Health check endpoints are configured for Kubernetes probes.
+src/
+├── config/              # Service configuration
+├── shared/
+│   ├── filters/         # Global exception handling
+│   ├── health/          # Health checks (DB, Redis)
+│   ├── interceptors/    # Request/response transformation
+│   ├── logger/          # Structured logging
+│   ├── messaging/       # Redis Streams pub/sub
+│   ├── metrics/         # Prometheus metrics
+│   └── prisma/          # Database access (optional)
+└── modules/
+    └── orders/          # Example domain module
+```
 
 ## License
 

@@ -22,3 +22,4 @@ export class OrderCreatedEvent {
     Object.assign(this, partial)
   }
 }
+
