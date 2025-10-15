@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+// eslint-disable-next-line sonarjs/deprecation -- Using deprecated APIs until @nestjs/terminus provides alternatives
 import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus'
 
 import { RedisService } from '../messaging/redis.service'
@@ -9,8 +10,11 @@ import { RedisService } from '../messaging/redis.service'
  * Checks the health of the Redis connection.
  * Used in readiness probes to ensure the service doesn't receive traffic
  * when it can't communicate with Redis.
+ *
+ * Note: Uses deprecated @nestjs/terminus APIs. Will be updated when new APIs are available.
  */
 @Injectable()
+// eslint-disable-next-line sonarjs/deprecation -- HealthIndicator is deprecated but still the recommended approach
 export class RedisHealthIndicator extends HealthIndicator {
   constructor(private readonly redisService: RedisService) {
     super()
@@ -46,6 +50,7 @@ export class RedisHealthIndicator extends HealthIndicator {
     } catch (error) {
       // Return unhealthy status
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      // eslint-disable-next-line sonarjs/deprecation -- HealthCheckError is deprecated but still the recommended approach
       throw new HealthCheckError(
         'Redis health check failed',
         this.getStatus(key, false, {

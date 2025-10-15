@@ -1,10 +1,11 @@
+import { randomUUID } from 'node:crypto'
+
 import {
   CallHandler,
   ExecutionContext,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common'
-import { randomUUID } from 'node:crypto'
 import { Observable } from 'rxjs'
 
 /**
@@ -39,8 +40,7 @@ export class RequestIdInterceptor implements NestInterceptor {
     // Extract or generate request ID
     // Check the X-Request-ID header first (common convention)
     // If not present, generate a new UUID
-    const requestId =
-      request.headers['x-request-id'] || request.headers['x-request-id'] || randomUUID()
+    const requestId = request.headers['x-request-id'] || randomUUID()
 
     // Attach the request ID to the request object
     // This makes it accessible in controllers, services, and guards

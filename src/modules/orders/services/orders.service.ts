@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto'
+
 import { Injectable, Logger } from '@nestjs/common'
 
 import { MessageProducerService } from '../../../shared/messaging'
@@ -33,7 +35,9 @@ export class OrdersService {
     this.logger.log(`Creating order for user ${createOrderDto.userId}`)
 
     // Generate order ID (in real app, this might come from database)
-    const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+    // Using crypto.randomBytes for secure random ID generation
+    const randomId = randomBytes(4).toString('hex')
+    const orderId = `order_${Date.now()}_${randomId}`
 
     // Calculate total amount
     const totalAmount = createOrderDto.quantity * createOrderDto.price
@@ -82,7 +86,7 @@ export class OrdersService {
    * @returns Array of all orders
    */
   async findAll(): Promise<OrderCreatedEvent[]> {
-    return Array.from(this.orders.values())
+    return [...this.orders.values()]
   }
 
   /**
@@ -92,9 +96,6 @@ export class OrdersService {
    * @returns Array of user's orders
    */
   async findByUserId(userId: string): Promise<OrderCreatedEvent[]> {
-    return Array.from(this.orders.values()).filter(
-      (order) => order.userId === userId,
-    )
+    return [...this.orders.values()].filter((order) => order.userId === userId)
   }
 }
-

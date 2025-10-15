@@ -3,10 +3,7 @@ import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './shared/filters'
-import {
-    RequestIdInterceptor,
-    TransformInterceptor,
-} from './shared/interceptors'
+import { RequestIdInterceptor, TransformInterceptor } from './shared/interceptors'
 import { AppLogger } from './shared/logger/logger.service'
 import { MetricsInterceptor } from './shared/metrics'
 import { GlobalValidationPipe } from './shared/pipes'
@@ -62,7 +59,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalInterceptors(
     new RequestIdInterceptor(), // First: Add request ID for tracing
     new TransformInterceptor(), // Second: Transform responses
-    app.get(MetricsInterceptor), // Third: Record metrics
+    app.get(MetricsInterceptor) // Third: Record metrics
   )
 
   // Enable graceful shutdown hooks
@@ -99,5 +96,5 @@ process.on('unhandledRejection', (reason, promise) => {
 // eslint-disable-next-line unicorn/prefer-top-level-await
 bootstrap().catch((error) => {
   console.error('Failed to start application:', error)
-  process.exit(1)
+  throw error
 })

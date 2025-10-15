@@ -100,7 +100,6 @@ export class MessageConsumerService implements OnModuleDestroy {
     consumer: string,
     handler: (message: T) => Promise<void>,
   ): Promise<void> {
-    const client = this.redisService.getClient()
     const consumerKey = `${stream}:${consumerGroup}:${consumer}`
 
     while (this.consumers.get(consumerKey) && !this.isShuttingDown) {
@@ -108,47 +107,69 @@ export class MessageConsumerService implements OnModuleDestroy {
         // First, process any pending messages that weren't acknowledged
         await this.processPendingMessages(stream, consumerGroup, consumer, handler)
 
-        // Read new messages from the stream
-        // XREADGROUP blocks for 5 seconds waiting for new messages
-        // '>' means only read new messages not yet delivered to this consumer group
-        // Using call method to bypass strict type checking for Redis command
-        const results = (await client.call(
-          'XREADGROUP',
-          'GROUP',
-          consumerGroup,
-          consumer,
-          'BLOCK',
-          5000,
-          'COUNT',
-          10,
-          'STREAMS',
-          stream,
-          '>',
-        )) as Array<[string, Array<[string, string[]]>]> | null
-
-        if (results && results.length > 0) {
-          for (const [, messages] of results) {
-            for (const [messageId, fields] of messages) {
-              await this.processMessage(
-                stream,
-                consumerGroup,
-                messageId,
-                fields,
-                handler,
-              )
-            }
-          }
-        }
+        // Read and process new messages
+        await this.readAndProcessNewMessages(stream, consumerGroup, consumer, handler)
       } catch (error) {
-        if (!this.isShuttingDown) {
-          this.logger.error(`Error in consume loop for ${stream}:`, error)
-          // Wait before retrying to avoid tight loop on persistent errors
-          await new Promise((resolve) => setTimeout(resolve, 5000))
-        }
+        await this.handleConsumeError(stream, error)
       }
     }
 
     this.logger.log(`Consumer ${consumer} stopped for stream ${stream}`)
+  }
+
+  /**
+   * Read and process new messages from the stream
+   */
+  private async readAndProcessNewMessages<T>(
+    stream: string,
+    consumerGroup: string,
+    consumer: string,
+    handler: (message: T) => Promise<void>,
+  ): Promise<void> {
+    const client = this.redisService.getClient()
+
+    // Read new messages from the stream
+    // XREADGROUP blocks for 5 seconds waiting for new messages
+    // '>' means only read new messages not yet delivered to this consumer group
+    // Using call method to bypass strict type checking for Redis command
+    const results = (await client.call(
+      'XREADGROUP',
+      'GROUP',
+      consumerGroup,
+      consumer,
+      'BLOCK',
+      5000,
+      'COUNT',
+      10,
+      'STREAMS',
+      stream,
+      '>',
+    )) as Array<[string, Array<[string, string[]]>]> | null
+
+    if (results && results.length > 0) {
+      for (const [, messages] of results) {
+        for (const [messageId, fields] of messages) {
+          await this.processMessage(
+            stream,
+            consumerGroup,
+            messageId,
+            fields,
+            handler,
+          )
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle errors in the consumption loop
+   */
+  private async handleConsumeError(stream: string, error: unknown): Promise<void> {
+    if (!this.isShuttingDown) {
+      this.logger.error(`Error in consume loop for ${stream}:`, error)
+      // Wait before retrying to avoid tight loop on persistent errors
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+    }
   }
 
   /**

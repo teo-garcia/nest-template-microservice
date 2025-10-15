@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import request from 'supertest'
+import { App } from 'supertest/types'
 
 import { AppModule } from '../src/app.module'
 
@@ -15,7 +16,7 @@ import { AppModule } from '../src/app.module'
  * - Message publishing (unit test - actual consumption requires multiple services)
  */
 describe('AppController (e2e)', () => {
-  let app: INestApplication
+  let app: INestApplication<App>
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -98,8 +99,9 @@ describe('AppController (e2e)', () => {
   })
 
   describe('Orders API', () => {
-    it('/api/orders (GET) should return empty array initially', () => {
-      return request(app.getHttpServer()).get('/api/orders').expect(200).expect([])
+    it('/api/orders (GET) should return empty array initially', async () => {
+      const response = await request(app.getHttpServer()).get('/api/orders').expect(200)
+      expect(response.body).toEqual([])
     })
 
     it('/api/orders (POST) should create an order', async () => {
@@ -123,14 +125,17 @@ describe('AppController (e2e)', () => {
       expect(response.body).toHaveProperty('totalAmount', 59.98)
     })
 
-    it('/api/orders (POST) should validate input', () => {
-      return request(app.getHttpServer())
+    it('/api/orders (POST) should validate input', async () => {
+      const response = await request(app.getHttpServer())
         .post('/api/orders')
         .send({
           userId: 'user_123',
           // Missing required fields
         })
         .expect(400)
+
+      expect(response.body).toHaveProperty('message')
+      expect(response.body).toHaveProperty('error')
     })
 
     it('/api/orders/:id (GET) should return an order', async () => {
@@ -153,8 +158,13 @@ describe('AppController (e2e)', () => {
         })
     })
 
-    it('/api/orders/:id (GET) should return 404 for non-existent order', () => {
-      return request(app.getHttpServer()).get('/api/orders/non_existent_id').expect(404)
+    it('/api/orders/:id (GET) should return 404 for non-existent order', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/orders/non_existent_id')
+        .expect(404)
+
+      expect(response.body).toHaveProperty('message')
+      expect(response.body).toHaveProperty('statusCode', 404)
     })
   })
 })

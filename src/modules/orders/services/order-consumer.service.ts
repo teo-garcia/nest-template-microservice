@@ -4,6 +4,27 @@ import { ConfigService } from '@nestjs/config'
 import { MessageConsumerService } from '../../../shared/messaging'
 
 /**
+ * Payment Completed Event
+ */
+interface PaymentCompletedEvent {
+  orderId: string
+  userId: string
+  amount: number
+  paymentMethod: string
+  transactionId: string
+}
+
+/**
+ * Inventory Reserved Event
+ */
+interface InventoryReservedEvent {
+  orderId: string
+  productId: string
+  quantity: number
+  warehouseId: string
+}
+
+/**
  * Order Consumer Service
  *
  * Demonstrates how to consume messages from Redis Streams.
@@ -20,7 +41,7 @@ export class OrderConsumerService implements OnModuleInit {
 
   constructor(
     private readonly messageConsumer: MessageConsumerService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -49,12 +70,12 @@ export class OrderConsumerService implements OnModuleInit {
    */
   private async subscribeToPaymentEvents(): Promise<void> {
     try {
-      await this.messageConsumer.subscribe(
+      await this.messageConsumer.subscribe<PaymentCompletedEvent>(
         'payments:completed',
         'order-service',
-        async (message: any) => {
+        async (message) => {
           await this.handlePaymentCompleted(message)
-        },
+        }
       )
       this.logger.log('Subscribed to payments:completed stream')
     } catch (error) {
@@ -67,12 +88,12 @@ export class OrderConsumerService implements OnModuleInit {
    */
   private async subscribeToInventoryEvents(): Promise<void> {
     try {
-      await this.messageConsumer.subscribe(
+      await this.messageConsumer.subscribe<InventoryReservedEvent>(
         'inventory:reserved',
         'order-service',
-        async (message: any) => {
+        async (message) => {
           await this.handleInventoryReserved(message)
-        },
+        }
       )
       this.logger.log('Subscribed to inventory:reserved stream')
     } catch (error) {
@@ -85,7 +106,7 @@ export class OrderConsumerService implements OnModuleInit {
    *
    * When payment is completed, update order status and proceed with fulfillment
    */
-  private async handlePaymentCompleted(message: any): Promise<void> {
+  private async handlePaymentCompleted(message: PaymentCompletedEvent): Promise<void> {
     this.logger.log(`Payment completed for order ${message.orderId}`)
 
     // In a real application:
@@ -103,7 +124,7 @@ export class OrderConsumerService implements OnModuleInit {
    *
    * When inventory is reserved, confirm the order can proceed
    */
-  private async handleInventoryReserved(message: any): Promise<void> {
+  private async handleInventoryReserved(message: InventoryReservedEvent): Promise<void> {
     this.logger.log(`Inventory reserved for order ${message.orderId}`)
 
     // In a real application:
@@ -115,4 +136,3 @@ export class OrderConsumerService implements OnModuleInit {
     this.logger.debug('Inventory details:', JSON.stringify(message))
   }
 }
-
