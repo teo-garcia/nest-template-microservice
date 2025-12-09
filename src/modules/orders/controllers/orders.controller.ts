@@ -1,15 +1,15 @@
 import {
-    Body,
-    Controller,
-    Get,
-    NotFoundException,
-    Param,
-    Post,
-    Query,
-} from '@nestjs/common'
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 
-import { CreateOrderDto } from '../dto'
-import { OrdersService } from '../services'
+import { CreateOrderDto } from "../dto";
+import { OrdersService } from "../services";
 
 /**
  * Orders Controller
@@ -22,7 +22,7 @@ import { OrdersService } from '../services'
  * - GET /orders: Get all orders (optionally filtered by userId)
  * - GET /orders/:id: Get a specific order
  */
-@Controller('orders')
+@Controller("orders")
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -43,7 +43,7 @@ export class OrdersController {
    */
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto) {
-    return await this.ordersService.create(createOrderDto)
+    return await this.ordersService.create(createOrderDto);
   }
 
   /**
@@ -57,11 +57,11 @@ export class OrdersController {
    * GET /api/orders?userId=user_123
    */
   @Get()
-  async findAll(@Query('userId') userId?: string) {
+  async findAll(@Query("userId") userId?: string) {
     if (userId) {
-      return await this.ordersService.findByUserId(userId)
+      return await this.ordersService.findByUserId(userId);
     }
-    return await this.ordersService.findAll()
+    return await this.ordersService.findAll();
   }
 
   /**
@@ -74,15 +74,12 @@ export class OrdersController {
    * Example:
    * GET /api/orders/order_1234567890_abc123
    */
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const order = await this.ordersService.findOne(id)
+  @Get(":id")
+  async findOne(@Param("id") id: string) {
+    const order = await this.ordersService.findOne(id);
     if (!order) {
-      throw new NotFoundException(`Order with ID ${id} not found`)
+      throw new NotFoundException(`Order with ID ${id} not found`);
     }
-    return order
+    return order;
   }
 }
-
-
-

@@ -1,17 +1,17 @@
-import base from '@teo-garcia/eslint-config-shared/base'
-import node from '@teo-garcia/eslint-config-shared/node'
-import jest from 'eslint-plugin-jest'
-import globals from 'globals'
+import base from "@teo-garcia/eslint-config-shared/base";
+import node from "@teo-garcia/eslint-config-shared/node";
+import jest from "eslint-plugin-jest";
+import globals from "globals";
 
 export default [
   ...base,
   ...node,
   {
     files: [
-      '**/*.test.{js,ts}',
-      '**/*.spec.{js,ts}',
-      '**/test/**/*',
-      '**/tests/**/*',
+      "**/*.test.{js,ts}",
+      "**/*.spec.{js,ts}",
+      "**/test/**/*",
+      "**/tests/**/*",
     ],
     plugins: {
       jest,
@@ -26,4 +26,4 @@ export default [
       ...jest.configs.recommended.rules,
     },
   },
-]
+];

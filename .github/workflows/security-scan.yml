@@ -7,7 +7,7 @@ on:
     branches: [main]
   schedule:
     # Run every Monday at 9:00 AM UTC
-    - cron: '0 9 * * 1'
+    - cron: "0 9 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -24,32 +24,32 @@ jobs:
       - name: Run Trivy vulnerability scanner in fs mode
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-fs-results.sarif'
+          sarif_file: "trivy-fs-results.sarif"
 
       - name: Run Trivy vulnerability scanner on Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'config'
-          scan-ref: './docker/Dockerfile'
-          format: 'sarif'
-          output: 'trivy-docker-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "config"
+          scan-ref: "./docker/Dockerfile"
+          format: "sarif"
+          output: "trivy-docker-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Docker scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-docker-results.sarif'
+          sarif_file: "trivy-docker-results.sarif"
 
   dependency-review:
     name: Dependency Review
@@ -84,6 +84,3 @@ jobs:
       - name: Run npm audit
         run: pnpm audit --audit-level=high
         continue-on-error: true
-
-
-

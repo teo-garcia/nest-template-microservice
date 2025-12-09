@@ -1,8 +1,8 @@
-import { Global, Module } from '@nestjs/common'
+import { Global, Module } from "@nestjs/common";
 
-import { MessageConsumerService } from './message-consumer.service'
-import { MessageProducerService } from './message-producer.service'
-import { RedisService } from './redis.service'
+import { MessageConsumerService } from "./message-consumer.service";
+import { MessageProducerService } from "./message-producer.service";
+import { RedisService } from "./redis.service";
 
 /**
  * Messaging Module
@@ -21,6 +21,3 @@ import { RedisService } from './redis.service'
   exports: [RedisService, MessageProducerService, MessageConsumerService],
 })
 export class MessagingModule {}
-
-
-

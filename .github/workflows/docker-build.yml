@@ -1,11 +1,27 @@
+# =============================================================================
+# Docker Build Workflow (Template - Disabled by Default)
+# =============================================================================
+#
+# This workflow is disabled by default for this template repository.
+# It serves as a reference for setting up Docker builds in your own project.
+#
+# TO ENABLE:
+# 1. Uncomment the push/pull_request triggers below
+# 2. Configure your container registry (GHCR is pre-configured)
+# 3. Set push: true or use the conditional push logic
+# 4. Optionally enable multi-platform builds (linux/amd64,linux/arm64)
+#
+# =============================================================================
+
 name: Docker Build
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+  # Uncomment these to enable automatic builds:
+  # push:
+  #   branches: [main, develop]
+  # pull_request:
+  #   branches: [main]
+  workflow_dispatch: # Manual trigger only (for testing)
 
 env:
   REGISTRY: ghcr.io
@@ -21,16 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Uncomment for multi-platform builds (requires QEMU):
+      # - name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # Uncomment to push images to registry:
+      # - name: Log in to Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ env.REGISTRY }}
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
         id: meta
@@ -43,20 +63,14 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: false # Set to true when ready to deploy
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
-
-      - name: Image digest
-        run: echo ${{ steps.build.outputs.digest }}
-
-
-
+          platforms: linux/amd64 # Add linux/arm64 for multi-platform

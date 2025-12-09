@@ -1,27 +1,27 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
-import { MessageConsumerService } from '../../../shared/messaging'
+import { MessageConsumerService } from "../../../shared/messaging";
 
 /**
  * Payment Completed Event
  */
 interface PaymentCompletedEvent {
-  orderId: string
-  userId: string
-  amount: number
-  paymentMethod: string
-  transactionId: string
+  orderId: string;
+  userId: string;
+  amount: number;
+  paymentMethod: string;
+  transactionId: string;
 }
 
 /**
  * Inventory Reserved Event
  */
 interface InventoryReservedEvent {
-  orderId: string
-  productId: string
-  quantity: number
-  warehouseId: string
+  orderId: string;
+  productId: string;
+  quantity: number;
+  warehouseId: string;
 }
 
 /**
@@ -37,11 +37,11 @@ interface InventoryReservedEvent {
  */
 @Injectable()
 export class OrderConsumerService implements OnModuleInit {
-  private readonly logger = new Logger(OrderConsumerService.name)
+  private readonly logger = new Logger(OrderConsumerService.name);
 
   constructor(
     private readonly messageConsumer: MessageConsumerService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -50,19 +50,20 @@ export class OrderConsumerService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     // Check if messaging is enabled
     const messagingEnabled =
-      this.configService.get<boolean>('config.features.enableMessaging') ?? true
+      this.configService.get<boolean>("config.features.enableMessaging") ??
+      true;
 
     if (!messagingEnabled) {
-      this.logger.log('Messaging is disabled, skipping subscriptions')
-      return
+      this.logger.log("Messaging is disabled, skipping subscriptions");
+      return;
     }
 
     // Subscribe to payment completed events
     // In a real microservice architecture, the payment service would publish these
-    await this.subscribeToPaymentEvents()
+    await this.subscribeToPaymentEvents();
 
     // Subscribe to inventory events
-    await this.subscribeToInventoryEvents()
+    await this.subscribeToInventoryEvents();
   }
 
   /**
@@ -71,15 +72,15 @@ export class OrderConsumerService implements OnModuleInit {
   private async subscribeToPaymentEvents(): Promise<void> {
     try {
       await this.messageConsumer.subscribe<PaymentCompletedEvent>(
-        'payments:completed',
-        'order-service',
+        "payments:completed",
+        "order-service",
         async (message) => {
-          await this.handlePaymentCompleted(message)
-        }
-      )
-      this.logger.log('Subscribed to payments:completed stream')
+          await this.handlePaymentCompleted(message);
+        },
+      );
+      this.logger.log("Subscribed to payments:completed stream");
     } catch (error) {
-      this.logger.error('Failed to subscribe to payment events:', error)
+      this.logger.error("Failed to subscribe to payment events:", error);
     }
   }
 
@@ -89,15 +90,15 @@ export class OrderConsumerService implements OnModuleInit {
   private async subscribeToInventoryEvents(): Promise<void> {
     try {
       await this.messageConsumer.subscribe<InventoryReservedEvent>(
-        'inventory:reserved',
-        'order-service',
+        "inventory:reserved",
+        "order-service",
         async (message) => {
-          await this.handleInventoryReserved(message)
-        }
-      )
-      this.logger.log('Subscribed to inventory:reserved stream')
+          await this.handleInventoryReserved(message);
+        },
+      );
+      this.logger.log("Subscribed to inventory:reserved stream");
     } catch (error) {
-      this.logger.error('Failed to subscribe to inventory events:', error)
+      this.logger.error("Failed to subscribe to inventory events:", error);
     }
   }
 
@@ -106,8 +107,10 @@ export class OrderConsumerService implements OnModuleInit {
    *
    * When payment is completed, update order status and proceed with fulfillment
    */
-  private async handlePaymentCompleted(message: PaymentCompletedEvent): Promise<void> {
-    this.logger.log(`Payment completed for order ${message.orderId}`)
+  private async handlePaymentCompleted(
+    message: PaymentCompletedEvent,
+  ): Promise<void> {
+    this.logger.log(`Payment completed for order ${message.orderId}`);
 
     // In a real application:
     // 1. Update order status in database
@@ -116,7 +119,7 @@ export class OrderConsumerService implements OnModuleInit {
     // 4. Update inventory
 
     // For demo, just log the event
-    this.logger.debug('Payment details:', JSON.stringify(message))
+    this.logger.debug("Payment details:", JSON.stringify(message));
   }
 
   /**
@@ -124,8 +127,10 @@ export class OrderConsumerService implements OnModuleInit {
    *
    * When inventory is reserved, confirm the order can proceed
    */
-  private async handleInventoryReserved(message: InventoryReservedEvent): Promise<void> {
-    this.logger.log(`Inventory reserved for order ${message.orderId}`)
+  private async handleInventoryReserved(
+    message: InventoryReservedEvent,
+  ): Promise<void> {
+    this.logger.log(`Inventory reserved for order ${message.orderId}`);
 
     // In a real application:
     // 1. Update order status
@@ -133,6 +138,6 @@ export class OrderConsumerService implements OnModuleInit {
     // 3. Handle case where inventory couldn't be reserved
 
     // For demo, just log the event
-    this.logger.debug('Inventory details:', JSON.stringify(message))
+    this.logger.debug("Inventory details:", JSON.stringify(message));
   }
 }

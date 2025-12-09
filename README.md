@@ -1,54 +1,95 @@
-# NestJS Microservice Template
+<div align="center">
 
-Production-ready NestJS microservice with Redis Streams messaging, health checks, metrics, and comprehensive DevOps tooling.
+# NestJS Template Microservice
 
-## Requirements
+**Production-ready NestJS microservice with Redis Streams, health checks, and metrics**
 
-- Node 22+
-- pnpm 9
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-22+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![pnpm](https://img.shields.io/badge/pnpm-9+-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com)
+[![Redis](https://img.shields.io/badge/Redis-Streams-DC382D?logo=redis&logoColor=white)](https://redis.io)
+
+Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) ecosystem
+
+</div>
+
+---
+
+## ✨ Features
+
+| Category | Technologies |
+|----------|-------------|
+| **Framework** | NestJS 11 with microservice architecture |
+| **Messaging** | Redis Streams for event-driven communication |
+| **Database** | Optional Prisma ORM with PostgreSQL |
+| **Observability** | Health checks, Prometheus metrics, structured logging |
+| **Resilience** | Consumer groups, dead letter queues, auto-retry |
+| **Type Safety** | TypeScript with strict mode |
+| **DevOps** | Docker, GitHub Actions CI/CD |
+
+## 📋 Requirements
+
+- Node.js 22+
+- pnpm 9+
 - Docker & Docker Compose
 - Redis (required for messaging)
 
-## Installation
+## 🚀 Quick Start
 
 ```bash
-npx degit teo-garcia/templates/nest-template-microservice my-service
+# Clone the template
+npx degit teo-garcia/nest-template-microservice my-service
 cd my-service
+
+# Install dependencies
 pnpm install
+
+# Setup environment
 cp .env.example .env
+
+# Start infrastructure (Redis + optional PostgreSQL)
 docker-compose up -d
+
+# Start development server
 pnpm start:dev
 ```
 
-## Features
+Open [http://localhost:3000](http://localhost:3000) to see your service.
 
-- **NestJS** - Progressive Node.js framework
-- **Redis Streams** - Event-driven inter-service messaging
-- **Prisma ORM** - Optional type-safe database access
-- **Health Checks** - Kubernetes-ready liveness and readiness probes
-- **Prometheus Metrics** - Built-in observability
-- **Request Tracing** - Request ID propagation for distributed tracing
-- **Consumer Groups** - Load balancing and message processing
-- **Dead Letter Queue** - Failed message handling
-- **Docker** - Multi-stage production builds
-- **GitHub Actions** - CI/CD with testing and security scanning
+## 📁 Project Structure
 
-## Scripts
-
-```bash
-pnpm start:dev      # Development with hot reload
-pnpm build          # Production build
-pnpm start:prod     # Run production build
-pnpm test           # Run unit tests
-pnpm test:e2e       # Run e2e tests
-pnpm lint:es        # ESLint check
-pnpm lint:ts        # TypeScript type check
-pnpm format         # Format code with Prettier
-pnpm db:generate    # Generate Prisma client (if using DB)
-pnpm db:migrate     # Run database migrations (if using DB)
+```
+src/
+├── config/                 # Service configuration
+├── shared/
+│   ├── filters/            # Global exception handling
+│   ├── health/             # Health checks (DB, Redis)
+│   ├── interceptors/       # Request/response transformation
+│   ├── logger/             # Structured logging (Winston)
+│   ├── messaging/          # Redis Streams pub/sub
+│   ├── metrics/            # Prometheus metrics
+│   └── prisma/             # Database client (optional)
+└── modules/
+    └── orders/             # Example domain module
 ```
 
-## Messaging
+## 🔧 Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm start:dev` | Start with hot reload |
+| `pnpm build` | Create production build |
+| `pnpm start:prod` | Run production server |
+| `pnpm test` | Run unit tests |
+| `pnpm test:e2e` | Run E2E tests |
+| `pnpm lint:es` | Lint and fix with ESLint |
+| `pnpm lint:ts` | TypeScript type checking |
+| `pnpm format` | Format with Prettier |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:generate` | Generate Prisma client |
+
+## 📨 Messaging
 
 ### Publishing Events
 
@@ -56,7 +97,7 @@ pnpm db:migrate     # Run database migrations (if using DB)
 await this.messageProducer.publish('orders:created', {
   orderId: '123',
   userId: 'user_456',
-  amount: 99.99
+  amount: 99.99,
 })
 ```
 
@@ -68,27 +109,41 @@ await this.messageConsumer.subscribe(
   'payment-service',
   async (order) => {
     await this.processPayment(order)
-  }
+  },
 )
 ```
 
-## Project Structure
+## 🏥 Health & Metrics
 
-```
-src/
-├── config/              # Service configuration
-├── shared/
-│   ├── filters/         # Global exception handling
-│   ├── health/          # Health checks (DB, Redis)
-│   ├── interceptors/    # Request/response transformation
-│   ├── logger/          # Structured logging
-│   ├── messaging/       # Redis Streams pub/sub
-│   ├── metrics/         # Prometheus metrics
-│   └── prisma/          # Database access (optional)
-└── modules/
-    └── orders/          # Example domain module
-```
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Full health status |
+| `GET /health/live` | Kubernetes liveness probe |
+| `GET /health/ready` | Kubernetes readiness probe |
+| `GET /metrics` | Prometheus metrics |
 
-## License
+## 📦 Shared Configs
+
+This template uses standardized configurations from the ecosystem:
+
+- [`@teo-garcia/eslint-config-shared`](https://github.com/teo-garcia/eslint-config-shared) - ESLint rules
+- [`@teo-garcia/prettier-config-shared`](https://github.com/teo-garcia/prettier-config-shared) - Prettier formatting
+- [`@teo-garcia/tsconfig-shared`](https://github.com/teo-garcia/tsconfig-shared) - TypeScript settings
+
+## 🔗 Related Templates
+
+| Template | Description |
+|----------|-------------|
+| [nest-template-monolith](https://github.com/teo-garcia/nest-template-monolith) | NestJS monolith starter |
+| [react-template-next](https://github.com/teo-garcia/react-template-next) | Next.js frontend |
+| [react-template-rr](https://github.com/teo-garcia/react-template-rr) | React Router SPA |
+
+## 📄 License
 
 MIT
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/teo-garcia">teo-garcia</a></sub>
+</div>

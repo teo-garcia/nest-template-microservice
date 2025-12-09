@@ -1,9 +1,9 @@
-import { randomBytes } from 'node:crypto'
+import { randomBytes } from "node:crypto";
 
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger } from "@nestjs/common";
 
-import { MessageProducerService } from '../../../shared/messaging'
-import { CreateOrderDto, OrderCreatedEvent } from '../dto'
+import { MessageProducerService } from "../../../shared/messaging";
+import { CreateOrderDto, OrderCreatedEvent } from "../dto";
 
 /**
  * Orders Service
@@ -16,8 +16,8 @@ import { CreateOrderDto, OrderCreatedEvent } from '../dto'
  */
 @Injectable()
 export class OrdersService {
-  private readonly logger = new Logger(OrdersService.name)
-  private readonly orders = new Map<string, OrderCreatedEvent>() // In-memory store for demo
+  private readonly logger = new Logger(OrdersService.name);
+  private readonly orders = new Map<string, OrderCreatedEvent>(); // In-memory store for demo
 
   constructor(private readonly messageProducer: MessageProducerService) {}
 
@@ -32,15 +32,15 @@ export class OrdersService {
    * @returns Created order
    */
   async create(createOrderDto: CreateOrderDto): Promise<OrderCreatedEvent> {
-    this.logger.log(`Creating order for user ${createOrderDto.userId}`)
+    this.logger.log(`Creating order for user ${createOrderDto.userId}`);
 
     // Generate order ID (in real app, this might come from database)
     // Using crypto.randomBytes for secure random ID generation
-    const randomId = randomBytes(4).toString('hex')
-    const orderId = `order_${Date.now()}_${randomId}`
+    const randomId = randomBytes(4).toString("hex");
+    const orderId = `order_${Date.now()}_${randomId}`;
 
     // Calculate total amount
-    const totalAmount = createOrderDto.quantity * createOrderDto.price
+    const totalAmount = createOrderDto.quantity * createOrderDto.price;
 
     // Create order object
     const order = new OrderCreatedEvent({
@@ -51,23 +51,23 @@ export class OrdersService {
       price: createOrderDto.price,
       totalAmount,
       createdAt: new Date(),
-    })
+    });
 
     // Store order (in real app, save to database)
-    this.orders.set(orderId, order)
+    this.orders.set(orderId, order);
 
     // Publish event to Redis Stream
     // Other microservices can subscribe to this stream to react to order creation
     try {
-      await this.messageProducer.publish('orders:created', order)
-      this.logger.log(`Published OrderCreatedEvent for order ${orderId}`)
+      await this.messageProducer.publish("orders:created", order);
+      this.logger.log(`Published OrderCreatedEvent for order ${orderId}`);
     } catch (error) {
-      this.logger.error('Failed to publish OrderCreatedEvent:', error)
+      this.logger.error("Failed to publish OrderCreatedEvent:", error);
       // In production, you might want to implement a retry mechanism
       // or store the event for later publishing
     }
 
-    return order
+    return order;
   }
 
   /**
@@ -77,7 +77,7 @@ export class OrdersService {
    * @returns Order or undefined
    */
   async findOne(id: string): Promise<OrderCreatedEvent | undefined> {
-    return this.orders.get(id)
+    return this.orders.get(id);
   }
 
   /**
@@ -86,7 +86,7 @@ export class OrdersService {
    * @returns Array of all orders
    */
   async findAll(): Promise<OrderCreatedEvent[]> {
-    return [...this.orders.values()]
+    return [...this.orders.values()];
   }
 
   /**
@@ -96,6 +96,6 @@ export class OrdersService {
    * @returns Array of user's orders
    */
   async findByUserId(userId: string): Promise<OrderCreatedEvent[]> {
-    return [...this.orders.values()].filter((order) => order.userId === userId)
+    return [...this.orders.values()].filter((order) => order.userId === userId);
   }
 }

@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common'
+import { Module } from "@nestjs/common";
 
-import { MessagingModule } from '../../shared/messaging'
-import { OrdersController } from './controllers'
-import { OrderConsumerService, OrdersService } from './services'
+import { MessagingModule } from "../../shared/messaging";
+import { OrdersController } from "./controllers";
+import { OrderConsumerService, OrdersService } from "./services";
 
 /**
  * Orders Module
@@ -22,6 +22,3 @@ import { OrderConsumerService, OrdersService } from './services'
   exports: [OrdersService],
 })
 export class OrdersModule {}
-
-
-

@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { Controller, Get } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 /**
  * App Controller
@@ -19,13 +19,10 @@ export class AppController {
   @Get()
   getInfo() {
     return {
-      service: this.configService.get('config.service.name'),
-      version: this.configService.get('config.service.version'),
-      environment: this.configService.get('config.app.env'),
+      service: this.configService.get("config.service.name"),
+      version: this.configService.get("config.service.version"),
+      environment: this.configService.get("config.app.env"),
       timestamp: new Date().toISOString(),
-    }
+    };
   }
 }
-
-
-

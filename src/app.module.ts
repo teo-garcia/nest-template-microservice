@@ -1,14 +1,14 @@
-import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
 
-import { AppController } from './app.controller'
-import { environmentConfig, validate } from './config'
-import { OrdersModule } from './modules/orders'
-import { HealthModule } from './shared/health'
-import { LoggerModule } from './shared/logger/logger.module'
-import { MessagingModule } from './shared/messaging'
-import { MetricsModule } from './shared/metrics'
-import { PrismaModule } from './shared/prisma'
+import { AppController } from "./app.controller";
+import { environmentConfig, validate } from "./config";
+import { OrdersModule } from "./modules/orders";
+import { HealthModule } from "./shared/health";
+import { LoggerModule } from "./shared/logger/logger.module";
+import { MessagingModule } from "./shared/messaging";
+import { MetricsModule } from "./shared/metrics";
+import { PrismaModule } from "./shared/prisma";
 
 /**
  * App Module
@@ -58,6 +58,3 @@ import { PrismaModule } from './shared/prisma'
   controllers: [AppController],
 })
 export class AppModule {}
-
-
-

@@ -1,12 +1,12 @@
-import { plainToClass } from 'class-transformer'
+import { plainToClass } from "class-transformer";
 import {
-    IsBoolean,
-    IsEnum,
-    IsNumber,
-    IsOptional,
-    IsString,
-    validateSync,
-} from 'class-validator'
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  validateSync,
+} from "class-validator";
 
 /**
  * Environment Variables Validation Schema
@@ -16,79 +16,79 @@ import {
  */
 
 enum Environment {
-  Development = 'development',
-  Production = 'production',
-  Test = 'test',
-  Staging = 'staging',
+  Development = "development",
+  Production = "production",
+  Test = "test",
+  Staging = "staging",
 }
 
 class EnvironmentVariables {
   // Service Info
   @IsString()
   @IsOptional()
-  SERVICE_NAME?: string
+  SERVICE_NAME?: string;
 
   // Application
   @IsEnum(Environment)
   @IsOptional()
-  NODE_ENV?: Environment = Environment.Development
+  NODE_ENV?: Environment = Environment.Development;
 
   @IsNumber()
   @IsOptional()
-  PORT?: number = 3000
+  PORT?: number = 3000;
 
   @IsString()
   @IsOptional()
-  API_PREFIX?: string = 'api'
+  API_PREFIX?: string = "api";
 
   // Database (optional for microservices)
   @IsString()
   @IsOptional()
-  DATABASE_URL?: string
+  DATABASE_URL?: string;
 
   @IsBoolean()
   @IsOptional()
-  DATABASE_ENABLED?: boolean
+  DATABASE_ENABLED?: boolean;
 
   // Redis (required for messaging)
   @IsString()
   @IsOptional()
-  REDIS_HOST?: string = 'localhost'
+  REDIS_HOST?: string = "localhost";
 
   @IsNumber()
   @IsOptional()
-  REDIS_PORT?: number = 6379
+  REDIS_PORT?: number = 6379;
 
   @IsString()
   @IsOptional()
-  REDIS_PASSWORD?: string
+  REDIS_PASSWORD?: string;
 
   @IsString()
   @IsOptional()
-  REDIS_KEY_PREFIX?: string
+  REDIS_KEY_PREFIX?: string;
 
   // Metrics
   @IsBoolean()
   @IsOptional()
-  METRICS_ENABLED?: boolean
+  METRICS_ENABLED?: boolean;
 
   // Logging
   @IsString()
   @IsOptional()
-  LOG_LEVEL?: string = 'info'
+  LOG_LEVEL?: string = "info";
 
   @IsBoolean()
   @IsOptional()
-  ENABLE_CONSOLE_LOGS?: boolean
+  ENABLE_CONSOLE_LOGS?: boolean;
 
   // Features
   @IsBoolean()
   @IsOptional()
-  ENABLE_MESSAGING?: boolean
+  ENABLE_MESSAGING?: boolean;
 
   @IsBoolean()
   @IsOptional()
-  ENABLE_CACHE?: boolean
+  ENABLE_CACHE?: boolean;
 }
 
 /**
@@ -100,18 +100,15 @@ class EnvironmentVariables {
 export function validate(config: Record<string, unknown>) {
   const validatedConfig = plainToClass(EnvironmentVariables, config, {
     enableImplicitConversion: true,
-  })
+  });
 
   const errors = validateSync(validatedConfig, {
     skipMissingProperties: false,
-  })
+  });
 
   if (errors.length > 0) {
-    throw new Error(errors.toString())
+    throw new Error(errors.toString());
   }
 
-  return validatedConfig
+  return validatedConfig;
 }
-
-
-

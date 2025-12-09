@@ -10,18 +10,15 @@
  * - Analytics service: Track order metrics
  */
 export class OrderCreatedEvent {
-  orderId: string
-  userId: string
-  productId: string
-  quantity: number
-  price: number
-  totalAmount: number
-  createdAt: Date
+  orderId: string;
+  userId: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  totalAmount: number;
+  createdAt: Date;
 
   constructor(partial: Partial<OrderCreatedEvent>) {
-    Object.assign(this, partial)
+    Object.assign(this, partial);
   }
 }
-
-
-

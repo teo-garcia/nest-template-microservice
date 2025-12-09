@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger } from "@nestjs/common";
 
-import { RedisService } from './redis.service'
+import { RedisService } from "./redis.service";
 
 /**
  * Message Producer Service
@@ -23,7 +23,7 @@ import { RedisService } from './redis.service'
  */
 @Injectable()
 export class MessageProducerService {
-  private readonly logger = new Logger(MessageProducerService.name)
+  private readonly logger = new Logger(MessageProducerService.name);
 
   constructor(private readonly redisService: RedisService) {}
 
@@ -41,7 +41,7 @@ export class MessageProducerService {
     maxLength = 10_000,
   ): Promise<string> {
     try {
-      const client = this.redisService.getClient()
+      const client = this.redisService.getClient();
 
       // Prepare message data
       // Redis Streams store data as field-value pairs
@@ -49,28 +49,28 @@ export class MessageProducerService {
       const messageData = {
         data: JSON.stringify(data),
         timestamp: Date.now().toString(),
-      }
+      };
 
       // XADD command adds a message to the stream
       // MAXLEN ~ keeps stream size manageable (approximate trimming for performance)
       // * auto-generates message ID based on timestamp
       const messageId = await client.xadd(
         stream,
-        'MAXLEN',
-        '~',
+        "MAXLEN",
+        "~",
         maxLength,
-        '*',
-        'data',
+        "*",
+        "data",
         messageData.data,
-        'timestamp',
+        "timestamp",
         messageData.timestamp,
-      )
+      );
 
-      this.logger.debug(`Published message to ${stream}: ${messageId}`)
-      return messageId
+      this.logger.debug(`Published message to ${stream}: ${messageId}`);
+      return messageId;
     } catch (error) {
-      this.logger.error(`Failed to publish message to ${stream}:`, error)
-      throw error
+      this.logger.error(`Failed to publish message to ${stream}:`, error);
+      throw error;
     }
   }
 
@@ -86,54 +86,51 @@ export class MessageProducerService {
     messages: T[],
   ): Promise<string[]> {
     try {
-      const client = this.redisService.getClient()
-      const pipeline = client.pipeline()
+      const client = this.redisService.getClient();
+      const pipeline = client.pipeline();
 
       // Add all messages to the pipeline
       for (const data of messages) {
         const messageData = {
           data: JSON.stringify(data),
           timestamp: Date.now().toString(),
-        }
+        };
 
         pipeline.xadd(
           stream,
-          'MAXLEN',
-          '~',
+          "MAXLEN",
+          "~",
           10_000,
-          '*',
-          'data',
+          "*",
+          "data",
           messageData.data,
-          'timestamp',
+          "timestamp",
           messageData.timestamp,
-        )
+        );
       }
 
       // Execute all commands at once
-      const results = await pipeline.exec()
+      const results = await pipeline.exec();
 
       if (!results) {
-        throw new Error('Pipeline execution failed')
+        throw new Error("Pipeline execution failed");
       }
 
       // Extract message IDs from results
       const messageIds = results.map((result) => {
         if (result[0]) {
-          throw result[0] // Throw error if any command failed
+          throw result[0]; // Throw error if any command failed
         }
-        return result[1] as string
-      })
+        return result[1] as string;
+      });
 
       this.logger.debug(
         `Published ${messages.length} messages to ${stream} in batch`,
-      )
-      return messageIds
+      );
+      return messageIds;
     } catch (error) {
-      this.logger.error(`Failed to publish batch to ${stream}:`, error)
-      throw error
+      this.logger.error(`Failed to publish batch to ${stream}:`, error);
+      throw error;
     }
   }
 }
-
-
-
