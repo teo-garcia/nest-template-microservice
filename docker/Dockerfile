@@ -1,7 +1,7 @@
 # ================================
 # Build Stage
 # ================================
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
@@ -31,7 +31,7 @@ RUN pnpm prune --prod
 # ================================
 # Production Stage
 # ================================
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
