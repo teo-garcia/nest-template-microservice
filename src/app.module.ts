@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config'
 
 import { AppController } from './app.controller'
 import { environmentConfig, validate } from './config'
-import { OrdersModule } from './modules/orders'
+import { TasksModule } from './modules/tasks'
 import { HealthModule } from './shared/health'
 import { LoggerModule } from './shared/logger/logger.module'
 import { MessagingModule } from './shared/messaging'
@@ -19,7 +19,7 @@ import { PrismaModule } from './shared/prisma'
  * Architecture:
  * - Shared modules (global): Logging, Metrics, Messaging, Database
  * - Infrastructure modules: Health checks, Configuration
- * - Feature modules: Orders (example domain module)
+ * - Feature modules: Tasks (example domain module)
  */
 @Module({
   imports: [
@@ -53,7 +53,7 @@ import { PrismaModule } from './shared/prisma'
 
     // Feature Modules
     // Domain-specific business logic
-    OrdersModule,
+    TasksModule,
   ],
   controllers: [AppController],
 })

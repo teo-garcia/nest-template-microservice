@@ -16,7 +16,7 @@ Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) eco
 
 ---
 
-## ✨ Features
+## Features
 
 | Category          | Technologies                                          |
 | ----------------- | ----------------------------------------------------- |
@@ -28,14 +28,14 @@ Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) eco
 | **Type Safety**   | TypeScript with strict mode                           |
 | **DevOps**        | Docker, GitHub Actions CI/CD                          |
 
-## 📋 Requirements
+## Requirements
 
 - Node.js 22+
 - pnpm 9+
 - Docker & Docker Compose
 - Redis (required for messaging)
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Clone the template
@@ -51,30 +51,111 @@ cp .env.example .env
 # Start infrastructure (Redis + optional PostgreSQL)
 docker-compose up -d
 
+# Generate Prisma client (if using database)
+pnpm db:generate
+
 # Start development server
 pnpm start:dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see your service.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
-├── config/                 # Service configuration
-├── shared/
-│   ├── filters/            # Global exception handling
-│   ├── health/             # Health checks (DB, Redis)
-│   ├── interceptors/       # Request/response transformation
-│   ├── logger/             # Structured logging (Winston)
-│   ├── messaging/          # Redis Streams pub/sub
-│   ├── metrics/            # Prometheus metrics
-│   └── prisma/             # Database client (optional)
-└── modules/
-    └── orders/             # Example domain module
+├── config/                 # Service configuration with validation
+├── modules/
+│   └── tasks/              # Example domain module
+│       ├── controllers/    # HTTP request handlers
+│       ├── services/       # Business logic + event publishing
+│       └── dto/            # Data transfer objects + events
+└── shared/
+    ├── filters/            # Global exception handling
+    ├── health/             # Health checks (DB, Redis)
+    ├── interceptors/       # Request/response transformation
+    ├── logger/             # Structured logging (Winston)
+    ├── messaging/          # Redis Streams pub/sub
+    ├── metrics/            # Prometheus metrics
+    └── prisma/             # Database client (optional)
 ```
 
-## 🔧 Scripts
+## Example Module: Tasks
+
+The template includes a complete `TasksModule` demonstrating:
+
+- Full CRUD operations with Prisma
+- Event publishing on create/update/delete
+- Event consumption with consumer groups
+- Input validation with class-validator
+
+### API Endpoints
+
+| Method | Endpoint         | Description                          |
+| ------ | ---------------- | ------------------------------------ |
+| POST   | `/api/tasks`     | Create a task (publishes event)      |
+| GET    | `/api/tasks`     | List all tasks                       |
+| GET    | `/api/tasks/:id` | Get a specific task                  |
+| PATCH  | `/api/tasks/:id` | Update a task (publishes event)      |
+| DELETE | `/api/tasks/:id` | Delete a task (publishes event)      |
+
+### Task Schema
+
+```prisma
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  priority    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+```
+
+## Messaging
+
+### Publishing Events
+
+When tasks are created, updated, or deleted, events are automatically published to Redis Streams:
+
+```typescript
+// Events are published automatically by TasksService
+// Stream names: tasks:created, tasks:updated, tasks:deleted, tasks:status_changed
+```
+
+### Consuming Events
+
+The `TaskConsumerService` demonstrates how to subscribe to events:
+
+```typescript
+await this.messageConsumer.subscribe<TaskEvent>(
+  'tasks:created',
+  'my-service-consumer',
+  async (event) => {
+    // React to task creation
+    console.log(`Task created: ${event.taskId}`);
+  },
+);
+```
+
+### Event Types
+
+| Stream                 | Description                 |
+| ---------------------- | --------------------------- |
+| `tasks:created`        | New task created            |
+| `tasks:updated`        | Task fields modified        |
+| `tasks:status_changed` | Task status changed         |
+| `tasks:deleted`        | Task deleted                |
+
+## Scripts
 
 | Command            | Description              |
 | ------------------ | ------------------------ |
@@ -89,31 +170,7 @@ src/
 | `pnpm db:migrate`  | Run database migrations  |
 | `pnpm db:generate` | Generate Prisma client   |
 
-## 📨 Messaging
-
-### Publishing Events
-
-```typescript
-await this.messageProducer.publish("orders:created", {
-  orderId: "123",
-  userId: "user_456",
-  amount: 99.99,
-});
-```
-
-### Consuming Events
-
-```typescript
-await this.messageConsumer.subscribe(
-  "orders:created",
-  "payment-service",
-  async (order) => {
-    await this.processPayment(order);
-  },
-);
-```
-
-## 🏥 Health & Metrics
+## Health & Metrics
 
 | Endpoint            | Description                |
 | ------------------- | -------------------------- |
@@ -122,7 +179,39 @@ await this.messageConsumer.subscribe(
 | `GET /health/ready` | Kubernetes readiness probe |
 | `GET /metrics`      | Prometheus metrics         |
 
-## 📦 Shared Configs
+## Configuration
+
+Environment variables are validated at startup. Key configuration:
+
+| Variable           | Description                | Default     |
+| ------------------ | -------------------------- | ----------- |
+| `PORT`             | Application port           | 3000        |
+| `SERVICE_NAME`     | Service identifier         | microservice|
+| `DATABASE_URL`     | PostgreSQL connection URL  | Optional    |
+| `DATABASE_ENABLED` | Enable database            | false       |
+| `REDIS_HOST`       | Redis host                 | localhost   |
+| `REDIS_PORT`       | Redis port                 | 6379        |
+| `REDIS_PASSWORD`   | Redis password             | (none)      |
+| `ENABLE_MESSAGING` | Enable Redis pub/sub       | false       |
+| `LOG_LEVEL`        | Logging level              | info        |
+
+## Docker Compose Profiles
+
+```bash
+# Basic (Redis only, no database)
+docker-compose up
+
+# With database
+docker-compose --profile with-db up
+
+# With UI tools (Redis Commander)
+docker-compose --profile with-ui up
+
+# Full stack
+docker-compose --profile with-db --profile with-ui up
+```
+
+## Shared Configs
 
 This template uses standardized configurations from the ecosystem:
 
@@ -130,7 +219,7 @@ This template uses standardized configurations from the ecosystem:
 - [`@teo-garcia/prettier-config-shared`](https://github.com/teo-garcia/prettier-config-shared) - Prettier formatting
 - [`@teo-garcia/tsconfig-shared`](https://github.com/teo-garcia/tsconfig-shared) - TypeScript settings
 
-## 🔗 Related Templates
+## Related Templates
 
 | Template                                                                       | Description             |
 | ------------------------------------------------------------------------------ | ----------------------- |
@@ -138,12 +227,12 @@ This template uses standardized configurations from the ecosystem:
 | [react-template-next](https://github.com/teo-garcia/react-template-next)       | Next.js frontend        |
 | [react-template-rr](https://github.com/teo-garcia/react-template-rr)           | React Router SPA        |
 
-## 📄 License
+## License
 
 MIT
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/teo-garcia">teo-garcia</a></sub>
+  <sub>Built by <a href="https://github.com/teo-garcia">teo-garcia</a></sub>
 </div>

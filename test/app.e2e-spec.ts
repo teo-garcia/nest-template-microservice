@@ -11,10 +11,11 @@ import { GlobalValidationPipe } from '../src/shared/pipes'
  * E2E Tests
  *
  * Tests the entire application flow including:
- * - REST API endpoints
+ * - REST API endpoints for Tasks
  * - Health checks
  * - Metrics
- * - Message publishing (unit test - actual consumption requires multiple services)
+ * - Input validation
+ * - Event publishing (verified via logs in real scenarios)
  */
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>
@@ -74,7 +75,7 @@ describe('AppController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/health/ready')
         .expect((res) => {
-          // Should be 200 if Redis is available, 503 if not
+          // Should be 200 if all dependencies are available, 503 if not
           expect([200, 503]).toContain(res.status)
         })
     })
@@ -102,39 +103,41 @@ describe('AppController (e2e)', () => {
     })
   })
 
-  describe('Orders API', () => {
-    it('/api/orders (GET) should return empty array initially', async () => {
-      const response = await request(app.getHttpServer()).get('/api/orders').expect(200)
-      expect(response.body).toEqual([])
+  describe('Tasks API', () => {
+    let createdTaskId: string
+
+    it('/api/tasks (GET) should return array (may be empty initially)', async () => {
+      const response = await request(app.getHttpServer()).get('/api/tasks').expect(200)
+
+      expect(Array.isArray(response.body)).toBe(true)
     })
 
-    it('/api/orders (POST) should create an order', async () => {
-      const createOrderDto = {
-        userId: 'user_123',
-        productId: 'prod_456',
-        quantity: 2,
-        price: 29.99,
+    it('/api/tasks (POST) should create a task', async () => {
+      const createTaskDto = {
+        title: 'Test Task',
+        description: 'This is a test task for microservice',
+        priority: 5,
       }
 
       const response = await request(app.getHttpServer())
-        .post('/api/orders')
-        .send(createOrderDto)
+        .post('/api/tasks')
+        .send(createTaskDto)
         .expect(201)
 
-      expect(response.body).toHaveProperty('orderId')
-      expect(response.body).toHaveProperty('userId', createOrderDto.userId)
-      expect(response.body).toHaveProperty('productId', createOrderDto.productId)
-      expect(response.body).toHaveProperty('quantity', createOrderDto.quantity)
-      expect(response.body).toHaveProperty('price', createOrderDto.price)
-      expect(response.body).toHaveProperty('totalAmount', 59.98)
+      expect(response.body).toHaveProperty('id')
+      expect(response.body).toHaveProperty('title', createTaskDto.title)
+      expect(response.body).toHaveProperty('description', createTaskDto.description)
+      expect(response.body).toHaveProperty('priority', createTaskDto.priority)
+      expect(response.body).toHaveProperty('status', 'PENDING')
+
+      createdTaskId = response.body.id
     })
 
-    it('/api/orders (POST) should validate input', async () => {
+    it('/api/tasks (POST) should validate input - missing title', async () => {
       const response = await request(app.getHttpServer())
-        .post('/api/orders')
+        .post('/api/tasks')
         .send({
-          userId: 'user_123',
-          // Missing required fields
+          description: 'Task without title',
         })
         .expect(400)
 
@@ -142,32 +145,116 @@ describe('AppController (e2e)', () => {
       expect(response.body).toHaveProperty('errors')
     })
 
-    it('/api/orders/:id (GET) should return an order', async () => {
-      // First create an order
-      const createResponse = await request(app.getHttpServer()).post('/api/orders').send({
-        userId: 'user_123',
-        productId: 'prod_789',
-        quantity: 1,
-        price: 19.99,
-      })
-
-      const orderId = createResponse.body.orderId
-
-      // Then fetch it
-      return request(app.getHttpServer())
-        .get(`/api/orders/${orderId}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body).toHaveProperty('orderId', orderId)
+    it('/api/tasks (POST) should validate input - invalid priority', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/tasks')
+        .send({
+          title: 'Test Task',
+          priority: 15, // Max is 10
         })
+        .expect(400)
+
+      expect(response.body).toHaveProperty('message')
+      expect(response.body).toHaveProperty('errors')
     })
 
-    it('/api/orders/:id (GET) should return 404 for non-existent order', async () => {
+    it('/api/tasks (POST) should validate input - invalid status', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/orders/non_existent_id')
+        .post('/api/tasks')
+        .send({
+          title: 'Test Task',
+          status: 'INVALID_STATUS',
+        })
+        .expect(400)
+
+      expect(response.body).toHaveProperty('message')
+      expect(response.body).toHaveProperty('errors')
+    })
+
+    it('/api/tasks/:id (GET) should return a task', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/tasks/${createdTaskId}`)
+        .expect(200)
+
+      expect(response.body).toHaveProperty('id', createdTaskId)
+      expect(response.body).toHaveProperty('title', 'Test Task')
+    })
+
+    it('/api/tasks/:id (GET) should return 404 for non-existent task', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/tasks/non_existent_id')
         .expect(404)
 
       expect(response.body).toHaveProperty('message')
+      expect(response.body).toHaveProperty('statusCode', 404)
+    })
+
+    it('/api/tasks/:id (PATCH) should update a task', async () => {
+      const updateTaskDto = {
+        title: 'Updated Task Title',
+        status: 'IN_PROGRESS',
+      }
+
+      const response = await request(app.getHttpServer())
+        .patch(`/api/tasks/${createdTaskId}`)
+        .send(updateTaskDto)
+        .expect(200)
+
+      expect(response.body).toHaveProperty('id', createdTaskId)
+      expect(response.body).toHaveProperty('title', updateTaskDto.title)
+      expect(response.body).toHaveProperty('status', updateTaskDto.status)
+    })
+
+    it('/api/tasks/:id (PATCH) should return 404 for non-existent task', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/api/tasks/non_existent_id')
+        .send({ title: 'New Title' })
+        .expect(404)
+
+      expect(response.body).toHaveProperty('statusCode', 404)
+    })
+
+    it('/api/tasks?status=IN_PROGRESS (GET) should filter by status', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/tasks?status=IN_PROGRESS')
+        .expect(200)
+
+      expect(Array.isArray(response.body)).toBe(true)
+      for (const task of response.body) {
+        expect(task.status).toBe('IN_PROGRESS')
+      }
+    })
+
+    it('/api/tasks?priority=5 (GET) should filter by priority', async () => {
+      const response = await request(app.getHttpServer()).get('/api/tasks?priority=5').expect(200)
+
+      expect(Array.isArray(response.body)).toBe(true)
+      for (const task of response.body) {
+        expect(task.priority).toBeGreaterThanOrEqual(5)
+      }
+    })
+
+    it('/api/tasks/:id (DELETE) should delete a task', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`/api/tasks/${createdTaskId}`)
+        .expect(200)
+
+      expect(response.body).toHaveProperty('id', createdTaskId)
+    })
+
+    it('/api/tasks/:id (GET) should return 404 after deletion', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/api/tasks/${createdTaskId}`)
+        .expect(404)
+
+      expect(response.body).toHaveProperty('statusCode', 404)
+    })
+
+    it('/api/tasks/:id (DELETE) should return 404 for non-existent task', async () => {
+      const response = await request(app.getHttpServer())
+        .delete('/api/tasks/non_existent_id')
+        .expect(404)
+
       expect(response.body).toHaveProperty('statusCode', 404)
     })
   })

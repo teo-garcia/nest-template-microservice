@@ -78,7 +78,8 @@ export class HealthController {
 
     // Only check database if it's enabled for this service
     if (this.databaseEnabled) {
-      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma as any))
     }
 
     // If no external deps, just return OK
@@ -113,7 +114,8 @@ export class HealthController {
 
     // Database check (only if database is enabled)
     if (this.databaseEnabled) {
-      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma as any))
     }
 
     return this.health.check(checks)
