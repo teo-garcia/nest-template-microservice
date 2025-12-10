@@ -24,6 +24,7 @@ import { RedisHealthIndicator } from "./redis.health";
 @Controller("health")
 export class HealthController {
   private readonly databaseEnabled: boolean;
+  private readonly messagingEnabled: boolean;
 
   constructor(
     private health: HealthCheckService,
@@ -36,6 +37,10 @@ export class HealthController {
     // Check if database is enabled for this microservice
     this.databaseEnabled =
       this.configService.get<boolean>("config.database.enabled") ?? false;
+    // Check if messaging (Redis) is enabled
+    this.messagingEnabled =
+      this.configService.get<boolean>("config.features.enableMessaging") ??
+      false;
   }
 
   /**
@@ -65,16 +70,23 @@ export class HealthController {
   @Get("ready")
   @HealthCheck()
   checkReadiness() {
-    const checks = [
-      // Always check Redis as it's required for messaging
-      async () => this.redis.isHealthy("redis"),
-    ];
+    const checks: Array<() => Promise<unknown>> = [];
+
+    // Only check Redis if messaging is enabled
+    if (this.messagingEnabled) {
+      checks.push(async () => this.redis.isHealthy("redis"));
+    }
 
     // Only check database if it's enabled for this service
     if (this.databaseEnabled) {
       checks.push(async () =>
         this.prismaHealth.pingCheck("database", this.prisma),
       );
+    }
+
+    // If no external deps, just return OK
+    if (checks.length === 0) {
+      checks.push(async () => ({ app: { status: "up" } }));
     }
 
     return this.health.check(checks);
@@ -91,24 +103,22 @@ export class HealthController {
   @HealthCheck()
   check() {
     // Build health checks dynamically based on enabled features
-    if (this.databaseEnabled) {
-      return this.health.check([
-        // Memory check
-        () => this.memory.checkHeap("memory_heap", 300 * 1024 * 1024),
-        () => this.memory.checkRSS("memory_rss", 500 * 1024 * 1024),
-        // Redis check
-        () => this.redis.isHealthy("redis"),
-        // Database check
-        () => this.prismaHealth.pingCheck("database", this.prisma),
-      ]);
-    }
-
-    return this.health.check([
-      // Memory check
+    const checks: Array<() => Promise<unknown>> = [
+      // Memory checks (always included)
       () => this.memory.checkHeap("memory_heap", 300 * 1024 * 1024),
       () => this.memory.checkRSS("memory_rss", 500 * 1024 * 1024),
-      // Redis check
-      () => this.redis.isHealthy("redis"),
-    ]);
+    ];
+
+    // Redis check (only if messaging is enabled)
+    if (this.messagingEnabled) {
+      checks.push(() => this.redis.isHealthy("redis"));
+    }
+
+    // Database check (only if database is enabled)
+    if (this.databaseEnabled) {
+      checks.push(() => this.prismaHealth.pingCheck("database", this.prisma));
+    }
+
+    return this.health.check(checks);
   }
 }

@@ -16,7 +16,7 @@ import { RedisHealthIndicator } from "./redis.health";
   imports: [
     TerminusModule,
     PrismaModule,
-    MessagingModule, // For Redis health checks
+    MessagingModule.forRoot(), // For Redis health checks (conditional)
   ],
   controllers: [HealthController],
   providers: [RedisHealthIndicator],

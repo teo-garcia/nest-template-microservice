@@ -67,7 +67,9 @@ export default registerAs("config", () => ({
   // Feature Flags
   // Toggle features without redeploying
   features: {
-    enableMessaging: process.env.ENABLE_MESSAGING !== "false",
+    // Messaging disabled by default for simpler local development
+    // Set ENABLE_MESSAGING=true to activate Redis-based pub/sub
+    enableMessaging: process.env.ENABLE_MESSAGING === "true",
     enableCache: process.env.ENABLE_CACHE === "true",
   },
 }));

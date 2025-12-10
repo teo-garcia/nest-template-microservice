@@ -5,6 +5,7 @@ import request from "supertest";
 import { App } from "supertest/types";
 
 import { AppModule } from "../src/app.module";
+import { GlobalValidationPipe } from "../src/shared/pipes";
 
 /**
  * E2E Tests
@@ -35,6 +36,9 @@ describe("AppController (e2e)", () => {
         exclude: ["health", "health/live", "health/ready", "metrics"],
       });
     }
+
+    // Apply global validation pipe (same as main.ts)
+    app.useGlobalPipes(new GlobalValidationPipe());
 
     await app.init();
   });
@@ -141,7 +145,7 @@ describe("AppController (e2e)", () => {
         .expect(400);
 
       expect(response.body).toHaveProperty("message");
-      expect(response.body).toHaveProperty("error");
+      expect(response.body).toHaveProperty("errors");
     });
 
     it("/api/orders/:id (GET) should return an order", async () => {

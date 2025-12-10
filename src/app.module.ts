@@ -39,9 +39,9 @@ import { PrismaModule } from "./shared/prisma";
     // Some microservices don't need their own database
     PrismaModule,
 
-    // Messaging
+    // Messaging (conditional - only active when ENABLE_MESSAGING=true)
     // Redis-based pub/sub for inter-service communication
-    MessagingModule,
+    MessagingModule.forRoot(),
 
     // Health Checks
     // Liveness and readiness probes for orchestrators
