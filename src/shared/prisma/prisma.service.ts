@@ -18,8 +18,10 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
   private readonly databaseEnabled: boolean;
   private pool?: Pool;
+  private readonly configService: ConfigService;
 
-  constructor(private configService: ConfigService) {
+  constructor(configService: ConfigService) {
+    // Must call super() first before accessing this
     // Check if database is enabled for this microservice
     const databaseEnabled =
       configService.get<boolean>("config.database.enabled") ?? false;
@@ -50,6 +52,7 @@ export class PrismaService
       });
     }
 
+    this.configService = configService;
     this.databaseEnabled = databaseEnabled && !!databaseUrl;
   }
 
