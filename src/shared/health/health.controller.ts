@@ -1,15 +1,15 @@
-import { Controller, Get } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { Controller, Get } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import {
   HealthCheck,
   HealthCheckService,
   HealthIndicatorFunction,
   MemoryHealthIndicator,
   PrismaHealthIndicator,
-} from "@nestjs/terminus";
+} from '@nestjs/terminus'
 
-import { PrismaService } from "../prisma";
-import { RedisHealthIndicator } from "./redis.health";
+import { PrismaService } from '../prisma'
+import { RedisHealthIndicator } from './redis.health'
 
 /**
  * Health Check Controller
@@ -22,10 +22,10 @@ import { RedisHealthIndicator } from "./redis.health";
  * - GET /health/ready: Readiness probe (is the service ready to handle traffic?)
  * - GET /health: Comprehensive health check
  */
-@Controller("health")
+@Controller('health')
 export class HealthController {
-  private readonly databaseEnabled: boolean;
-  private readonly messagingEnabled: boolean;
+  private readonly databaseEnabled: boolean
+  private readonly messagingEnabled: boolean
 
   constructor(
     private health: HealthCheckService,
@@ -33,15 +33,13 @@ export class HealthController {
     private redis: RedisHealthIndicator,
     private prismaHealth: PrismaHealthIndicator,
     private prisma: PrismaService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {
     // Check if database is enabled for this microservice
-    this.databaseEnabled =
-      this.configService.get<boolean>("config.database.enabled") ?? false;
+    this.databaseEnabled = this.configService.get<boolean>('config.database.enabled') ?? false
     // Check if messaging (Redis) is enabled
     this.messagingEnabled =
-      this.configService.get<boolean>("config.features.enableMessaging") ??
-      false;
+      this.configService.get<boolean>('config.features.enableMessaging') ?? false
   }
 
   /**
@@ -51,14 +49,14 @@ export class HealthController {
    * Kubernetes uses this to determine if the container should be restarted.
    * This should be a lightweight check that only fails if the app is truly broken.
    */
-  @Get("live")
+  @Get('live')
   @HealthCheck()
   checkLiveness() {
     return this.health.check([
       // Basic memory check to ensure the app isn't out of memory
       // Fails if heap memory usage exceeds 300MB
-      async () => this.memory.checkHeap("memory_heap", 300 * 1024 * 1024),
-    ]);
+      async () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
+    ])
   }
 
   /**
@@ -68,27 +66,27 @@ export class HealthController {
    * Kubernetes uses this to determine if the pod should receive traffic.
    * This validates that all critical dependencies are available.
    */
-  @Get("ready")
+  @Get('ready')
   @HealthCheck()
   checkReadiness() {
-    const checks: HealthIndicatorFunction[] = [];
+    const checks: HealthIndicatorFunction[] = []
 
     // Only check Redis if messaging is enabled
     if (this.messagingEnabled) {
-      checks.push(() => this.redis.isHealthy("redis"));
+      checks.push(() => this.redis.isHealthy('redis'))
     }
 
     // Only check database if it's enabled for this service
     if (this.databaseEnabled) {
-      checks.push(() => this.prismaHealth.pingCheck("database", this.prisma));
+      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma))
     }
 
     // If no external deps, just return OK
     if (checks.length === 0) {
-      checks.push(() => Promise.resolve({ app: { status: "up" as const } }));
+      checks.push(() => Promise.resolve({ app: { status: 'up' as const } }))
     }
 
-    return this.health.check(checks);
+    return this.health.check(checks)
   }
 
   /**
@@ -104,20 +102,20 @@ export class HealthController {
     // Build health checks dynamically based on enabled features
     const checks: HealthIndicatorFunction[] = [
       // Memory checks (always included)
-      () => this.memory.checkHeap("memory_heap", 300 * 1024 * 1024),
-      () => this.memory.checkRSS("memory_rss", 500 * 1024 * 1024),
-    ];
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 500 * 1024 * 1024),
+    ]
 
     // Redis check (only if messaging is enabled)
     if (this.messagingEnabled) {
-      checks.push(() => this.redis.isHealthy("redis"));
+      checks.push(() => this.redis.isHealthy('redis'))
     }
 
     // Database check (only if database is enabled)
     if (this.databaseEnabled) {
-      checks.push(() => this.prismaHealth.pingCheck("database", this.prisma));
+      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma))
     }
 
-    return this.health.check(checks);
+    return this.health.check(checks)
   }
 }

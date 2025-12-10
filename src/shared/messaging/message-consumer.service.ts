@@ -1,7 +1,7 @@
-import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 
-import { RedisService } from "./redis.service";
+import { RedisService } from './redis.service'
 
 /**
  * Message Handler Interface
@@ -9,7 +9,7 @@ import { RedisService } from "./redis.service";
  * Implement this interface to handle messages from a stream
  */
 export interface MessageHandler<T = unknown> {
-  handle(message: T): Promise<void>;
+  handle(message: T): Promise<void>
 }
 
 /**
@@ -38,13 +38,13 @@ export interface MessageHandler<T = unknown> {
  */
 @Injectable()
 export class MessageConsumerService implements OnModuleDestroy {
-  private readonly logger = new Logger(MessageConsumerService.name);
-  private readonly consumers = new Map<string, boolean>(); // Track active consumers
-  private isShuttingDown = false;
+  private readonly logger = new Logger(MessageConsumerService.name)
+  private readonly consumers = new Map<string, boolean>() // Track active consumers
+  private isShuttingDown = false
 
   constructor(
     private readonly redisService: RedisService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -59,39 +59,33 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     handler: (message: T) => Promise<void>,
-    consumerName?: string,
+    consumerName?: string
   ): Promise<void> {
-    const client = this.redisService.getClient();
+    const client = this.redisService.getClient()
     const consumer =
-      consumerName ||
-      `${this.configService.get("config.service.name")}-${Date.now()}`;
+      consumerName || `${this.configService.get('config.service.name')}-${Date.now()}`
 
     // Create consumer group if it doesn't exist
     try {
-      await client.xgroup("CREATE", stream, consumerGroup, "0", "MKSTREAM");
-      this.logger.log(
-        `Created consumer group ${consumerGroup} for stream ${stream}`,
-      );
+      await client.xgroup('CREATE', stream, consumerGroup, '0', 'MKSTREAM')
+      this.logger.log(`Created consumer group ${consumerGroup} for stream ${stream}`)
     } catch (error) {
       // Group already exists, which is fine
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      if (!errorMessage.includes("BUSYGROUP")) {
-        this.logger.error(`Failed to create consumer group:`, error);
-        throw error;
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (!errorMessage.includes('BUSYGROUP')) {
+        this.logger.error(`Failed to create consumer group:`, error)
+        throw error
       }
     }
 
     // Mark this consumer as active
-    const consumerKey = `${stream}:${consumerGroup}:${consumer}`;
-    this.consumers.set(consumerKey, true);
+    const consumerKey = `${stream}:${consumerGroup}:${consumer}`
+    this.consumers.set(consumerKey, true)
 
-    this.logger.log(
-      `Consumer ${consumer} subscribing to ${stream} in group ${consumerGroup}`,
-    );
+    this.logger.log(`Consumer ${consumer} subscribing to ${stream} in group ${consumerGroup}`)
 
     // Start consuming messages
-    this.consumeMessages(stream, consumerGroup, consumer, handler);
+    this.consumeMessages(stream, consumerGroup, consumer, handler)
   }
 
   /**
@@ -101,33 +95,23 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     consumer: string,
-    handler: (message: T) => Promise<void>,
+    handler: (message: T) => Promise<void>
   ): Promise<void> {
-    const consumerKey = `${stream}:${consumerGroup}:${consumer}`;
+    const consumerKey = `${stream}:${consumerGroup}:${consumer}`
 
     while (this.consumers.get(consumerKey) && !this.isShuttingDown) {
       try {
         // First, process any pending messages that weren't acknowledged
-        await this.processPendingMessages(
-          stream,
-          consumerGroup,
-          consumer,
-          handler,
-        );
+        await this.processPendingMessages(stream, consumerGroup, consumer, handler)
 
         // Read and process new messages
-        await this.readAndProcessNewMessages(
-          stream,
-          consumerGroup,
-          consumer,
-          handler,
-        );
+        await this.readAndProcessNewMessages(stream, consumerGroup, consumer, handler)
       } catch (error) {
-        await this.handleConsumeError(stream, error);
+        await this.handleConsumeError(stream, error)
       }
     }
 
-    this.logger.log(`Consumer ${consumer} stopped for stream ${stream}`);
+    this.logger.log(`Consumer ${consumer} stopped for stream ${stream}`)
   }
 
   /**
@@ -137,38 +121,32 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     consumer: string,
-    handler: (message: T) => Promise<void>,
+    handler: (message: T) => Promise<void>
   ): Promise<void> {
-    const client = this.redisService.getClient();
+    const client = this.redisService.getClient()
 
     // Read new messages from the stream
     // XREADGROUP blocks for 5 seconds waiting for new messages
     // '>' means only read new messages not yet delivered to this consumer group
     // Using call method to bypass strict type checking for Redis command
     const results = (await client.call(
-      "XREADGROUP",
-      "GROUP",
+      'XREADGROUP',
+      'GROUP',
       consumerGroup,
       consumer,
-      "BLOCK",
+      'BLOCK',
       5000,
-      "COUNT",
+      'COUNT',
       10,
-      "STREAMS",
+      'STREAMS',
       stream,
-      ">",
-    )) as Array<[string, Array<[string, string[]]>]> | null;
+      '>'
+    )) as Array<[string, Array<[string, string[]]>]> | null
 
     if (results && results.length > 0) {
       for (const [, messages] of results) {
         for (const [messageId, fields] of messages) {
-          await this.processMessage(
-            stream,
-            consumerGroup,
-            messageId,
-            fields,
-            handler,
-          );
+          await this.processMessage(stream, consumerGroup, messageId, fields, handler)
         }
       }
     }
@@ -177,14 +155,11 @@ export class MessageConsumerService implements OnModuleDestroy {
   /**
    * Handle errors in the consumption loop
    */
-  private async handleConsumeError(
-    stream: string,
-    error: unknown,
-  ): Promise<void> {
+  private async handleConsumeError(stream: string, error: unknown): Promise<void> {
     if (!this.isShuttingDown) {
-      this.logger.error(`Error in consume loop for ${stream}:`, error);
+      this.logger.error(`Error in consume loop for ${stream}:`, error)
       // Wait before retrying to avoid tight loop on persistent errors
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000))
     }
   }
 
@@ -195,23 +170,23 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     consumer: string,
-    handler: (message: T) => Promise<void>,
+    handler: (message: T) => Promise<void>
   ): Promise<void> {
-    const client = this.redisService.getClient();
+    const client = this.redisService.getClient()
 
     try {
       // XPENDING shows messages delivered but not acknowledged
       const pending = (await client.xpending(
         stream,
         consumerGroup,
-        "-",
-        "+",
+        '-',
+        '+',
         10,
-        consumer,
-      )) as Array<[string, string, number, number]>;
+        consumer
+      )) as Array<[string, string, number, number]>
 
       if (pending && Array.isArray(pending) && pending.length > 0) {
-        this.logger.debug(`Processing ${pending.length} pending messages`);
+        this.logger.debug(`Processing ${pending.length} pending messages`)
 
         for (const [messageId] of pending) {
           // Claim the message to process it again
@@ -220,32 +195,23 @@ export class MessageConsumerService implements OnModuleDestroy {
             consumerGroup,
             consumer,
             60_000, // Claim messages idle for > 60 seconds
-            messageId,
-          )) as Array<[string, string[]]>;
+            messageId
+          )) as Array<[string, string[]]>
 
           if (claimed && claimed.length > 0) {
-            const [, fields] = claimed[0];
-            await this.processMessage(
-              stream,
-              consumerGroup,
-              messageId,
-              fields,
-              handler,
-            );
+            const [, fields] = claimed[0]
+            await this.processMessage(stream, consumerGroup, messageId, fields, handler)
           }
         }
       }
     } catch (error) {
       // NOGROUP error is expected on first startup when stream/group doesn't exist yet
       // The subscribe method creates the group, but there may be no pending messages
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes("NOGROUP")) {
-        this.logger.debug(
-          `No pending messages for ${stream}:${consumerGroup} (group may be new)`,
-        );
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('NOGROUP')) {
+        this.logger.debug(`No pending messages for ${stream}:${consumerGroup} (group may be new)`)
       } else {
-        this.logger.error("Error processing pending messages:", error);
+        this.logger.error('Error processing pending messages:', error)
       }
     }
   }
@@ -259,53 +225,46 @@ export class MessageConsumerService implements OnModuleDestroy {
     messageId: string,
     fields: string[],
     handler: (message: T) => Promise<void>,
-    retryCount = 0,
+    retryCount = 0
   ): Promise<void> {
-    const client = this.redisService.getClient();
-    const maxRetries = 3;
+    const client = this.redisService.getClient()
+    const maxRetries = 3
 
     try {
       // Parse message data from Redis Stream format
       // Fields are in format: ['data', '{"key":"value"}', 'timestamp', '1234567890']
-      const dataIndex = fields.indexOf("data");
+      const dataIndex = fields.indexOf('data')
       if (dataIndex === -1 || dataIndex + 1 >= fields.length) {
-        throw new Error("Invalid message format: missing data field");
+        throw new Error('Invalid message format: missing data field')
       }
 
-      const messageData = JSON.parse(fields[dataIndex + 1]) as T;
+      const messageData = JSON.parse(fields[dataIndex + 1]) as T
 
       // Process the message
-      await handler(messageData);
+      await handler(messageData)
 
       // Acknowledge successful processing
-      await client.xack(stream, consumerGroup, messageId);
-      this.logger.debug(`Acknowledged message ${messageId} from ${stream}`);
+      await client.xack(stream, consumerGroup, messageId)
+      this.logger.debug(`Acknowledged message ${messageId} from ${stream}`)
     } catch (error) {
       this.logger.error(
         `Error processing message ${messageId} from ${stream} (attempt ${retryCount + 1}):`,
-        error,
-      );
+        error
+      )
 
       if (retryCount < maxRetries) {
         // Retry with exponential backoff
-        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
         this.logger.warn(
-          `Retrying message ${messageId} in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        await this.processMessage(
-          stream,
-          consumerGroup,
-          messageId,
-          fields,
-          handler,
-          retryCount + 1,
-        );
+          `Retrying message ${messageId} in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`
+        )
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        await this.processMessage(stream, consumerGroup, messageId, fields, handler, retryCount + 1)
       } else {
         // Move to dead letter queue after max retries
-        await this.moveToDeadLetterQueue(stream, messageId, fields, error);
+        await this.moveToDeadLetterQueue(stream, messageId, fields, error)
         // Still acknowledge to remove from pending
-        await client.xack(stream, consumerGroup, messageId);
+        await client.xack(stream, consumerGroup, messageId)
       }
     }
   }
@@ -317,55 +276,49 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     messageId: string,
     fields: string[],
-    error: unknown,
+    error: unknown
   ): Promise<void> {
     try {
-      const client = this.redisService.getClient();
-      const dlqStream = `${stream}:dlq`;
+      const client = this.redisService.getClient()
+      const dlqStream = `${stream}:dlq`
 
       // Store the failed message with error information
       await client.xadd(
         dlqStream,
-        "*",
+        '*',
         ...fields,
-        "originalMessageId",
+        'originalMessageId',
         messageId,
-        "error",
+        'error',
         error instanceof Error ? error.message : String(error),
-        "failedAt",
-        Date.now().toString(),
-      );
+        'failedAt',
+        Date.now().toString()
+      )
 
-      this.logger.error(
-        `Moved message ${messageId} from ${stream} to dead letter queue`,
-      );
+      this.logger.error(`Moved message ${messageId} from ${stream} to dead letter queue`)
     } catch (dlqError) {
-      this.logger.error("Failed to move message to DLQ:", dlqError);
+      this.logger.error('Failed to move message to DLQ:', dlqError)
     }
   }
 
   /**
    * Unsubscribe from a stream
    */
-  async unsubscribe(
-    stream: string,
-    consumerGroup: string,
-    consumerName: string,
-  ): Promise<void> {
-    const consumerKey = `${stream}:${consumerGroup}:${consumerName}`;
-    this.consumers.delete(consumerKey);
-    this.logger.log(`Unsubscribed ${consumerName} from ${stream}`);
+  async unsubscribe(stream: string, consumerGroup: string, consumerName: string): Promise<void> {
+    const consumerKey = `${stream}:${consumerGroup}:${consumerName}`
+    this.consumers.delete(consumerKey)
+    this.logger.log(`Unsubscribed ${consumerName} from ${stream}`)
   }
 
   /**
    * Gracefully shutdown all consumers
    */
   async onModuleDestroy(): Promise<void> {
-    this.logger.log("Shutting down message consumers...");
-    this.isShuttingDown = true;
-    this.consumers.clear();
+    this.logger.log('Shutting down message consumers...')
+    this.isShuttingDown = true
+    this.consumers.clear()
     // Give time for current messages to finish processing
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    this.logger.log("Message consumers shut down");
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+    this.logger.log('Message consumers shut down')
   }
 }

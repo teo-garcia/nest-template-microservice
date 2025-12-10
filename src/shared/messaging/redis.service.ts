@@ -1,6 +1,6 @@
-import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import Redis from "ioredis";
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import Redis from 'ioredis'
 
 /**
  * Redis Service
@@ -16,12 +16,12 @@ import Redis from "ioredis";
  */
 @Injectable()
 export class RedisService implements OnModuleDestroy {
-  private readonly logger = new Logger(RedisService.name);
-  private readonly client: Redis;
-  private isConnected = false;
+  private readonly logger = new Logger(RedisService.name)
+  private readonly client: Redis
+  private isConnected = false
 
   constructor(private readonly configService: ConfigService) {
-    const redisConfig = this.configService.get("config.redis");
+    const redisConfig = this.configService.get('config.redis')
 
     // Create Redis client with configuration
     this.client = new Redis({
@@ -36,68 +36,66 @@ export class RedisService implements OnModuleDestroy {
       // Retry strategy with exponential backoff
       // Retries: 0ms, 100ms, 400ms, 900ms, 1600ms, 2500ms, 3600ms, ...
       retryStrategy: (times: number) => {
-        const delay = Math.min(times * times * 100, 10_000);
-        this.logger.warn(
-          `Retrying Redis connection in ${delay}ms (attempt ${times})`,
-        );
-        return delay;
+        const delay = Math.min(times * times * 100, 10_000)
+        this.logger.warn(`Retrying Redis connection in ${delay}ms (attempt ${times})`)
+        return delay
       },
 
       // Reconnect only on actual connection errors, not command errors
       reconnectOnError: (error) => {
-        const message = error.message || "";
+        const message = error.message || ''
         // These are command errors, not connection errors - don't reconnect
         const isCommandError =
-          message.includes("NOGROUP") ||
-          message.includes("BUSYGROUP") ||
-          message.includes("WRONGTYPE");
+          message.includes('NOGROUP') ||
+          message.includes('BUSYGROUP') ||
+          message.includes('WRONGTYPE')
 
         if (isCommandError) {
           // Command error, don't trigger reconnection
-          return false;
+          return false
         }
 
         // Actual connection error, reconnect
-        this.logger.error("Redis connection error:", message);
-        return true;
+        this.logger.error('Redis connection error:', message)
+        return true
       },
-    });
+    })
 
     // Connection event handlers
-    this.client.on("connect", () => {
-      this.logger.log("Redis client connecting...");
-    });
+    this.client.on('connect', () => {
+      this.logger.log('Redis client connecting...')
+    })
 
-    this.client.on("ready", () => {
-      this.isConnected = true;
-      this.logger.log("Redis client connected and ready");
-    });
+    this.client.on('ready', () => {
+      this.isConnected = true
+      this.logger.log('Redis client connected and ready')
+    })
 
-    this.client.on("error", (error) => {
-      this.isConnected = false;
-      this.logger.error("Redis client error:", error.message);
-    });
+    this.client.on('error', (error) => {
+      this.isConnected = false
+      this.logger.error('Redis client error:', error.message)
+    })
 
-    this.client.on("close", () => {
-      this.isConnected = false;
-      this.logger.warn("Redis client connection closed");
-    });
+    this.client.on('close', () => {
+      this.isConnected = false
+      this.logger.warn('Redis client connection closed')
+    })
 
-    this.client.on("reconnecting", (delay: number) => {
-      this.logger.log(`Redis client reconnecting in ${delay}ms...`);
-    });
+    this.client.on('reconnecting', (delay: number) => {
+      this.logger.log(`Redis client reconnecting in ${delay}ms...`)
+    })
 
-    this.client.on("end", () => {
-      this.isConnected = false;
-      this.logger.warn("Redis client connection ended");
-    });
+    this.client.on('end', () => {
+      this.isConnected = false
+      this.logger.warn('Redis client connection ended')
+    })
   }
 
   /**
    * Get the Redis client instance
    */
   getClient(): Redis {
-    return this.client;
+    return this.client
   }
 
   /**
@@ -107,7 +105,7 @@ export class RedisService implements OnModuleDestroy {
    * The "ready" status means the client is connected and ready to receive commands.
    */
   isHealthy(): boolean {
-    return this.client.status === "ready";
+    return this.client.status === 'ready'
   }
 
   /**
@@ -115,11 +113,11 @@ export class RedisService implements OnModuleDestroy {
    */
   async ping(): Promise<boolean> {
     try {
-      const response = await this.client.ping();
-      return response === "PONG";
+      const response = await this.client.ping()
+      return response === 'PONG'
     } catch (error) {
-      this.logger.error("Failed to ping Redis:", error);
-      return false;
+      this.logger.error('Failed to ping Redis:', error)
+      return false
     }
   }
 
@@ -127,8 +125,8 @@ export class RedisService implements OnModuleDestroy {
    * Gracefully close Redis connection
    */
   async onModuleDestroy(): Promise<void> {
-    this.logger.log("Closing Redis connection...");
-    await this.client.quit();
-    this.logger.log("Redis connection closed");
+    this.logger.log('Closing Redis connection...')
+    await this.client.quit()
+    this.logger.log('Redis connection closed')
   }
 }

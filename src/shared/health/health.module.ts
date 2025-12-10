@@ -1,10 +1,10 @@
-import { Module } from "@nestjs/common";
-import { TerminusModule } from "@nestjs/terminus";
+import { Module } from '@nestjs/common'
+import { TerminusModule } from '@nestjs/terminus'
 
-import { MessagingModule } from "../messaging";
-import { PrismaModule } from "../prisma";
-import { HealthController } from "./health.controller";
-import { RedisHealthIndicator } from "./redis.health";
+import { MessagingModule } from '../messaging'
+import { PrismaModule } from '../prisma'
+import { HealthController } from './health.controller'
+import { RedisHealthIndicator } from './redis.health'
 
 /**
  * Health Module

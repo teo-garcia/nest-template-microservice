@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # Service containers for e2e tests
+    # Note: Redis is optional (only needed when ENABLE_MESSAGING=true)
     services:
       postgres:
         image: postgres:18-alpine
@@ -26,16 +27,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v6
 
@@ -45,8 +36,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: "24"
-          cache: "pnpm"
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -79,18 +70,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nest_microservice_test?schema=public
           DATABASE_ENABLED: false
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          ENABLE_MESSAGING: true
 
       - name: Run e2e tests
         run: pnpm test:e2e
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nest_microservice_test?schema=public
           DATABASE_ENABLED: false
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          ENABLE_MESSAGING: true
           PORT: 3001
 
       - name: Upload coverage reports

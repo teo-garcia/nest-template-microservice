@@ -1,9 +1,9 @@
-import { DynamicModule, Global, Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { DynamicModule, Global, Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 
-import { MessageConsumerService } from "./message-consumer.service";
-import { MessageProducerService } from "./message-producer.service";
-import { RedisService } from "./redis.service";
+import { MessageConsumerService } from './message-consumer.service'
+import { MessageProducerService } from './message-producer.service'
+import { RedisService } from './redis.service'
 
 /**
  * Messaging Module
@@ -28,18 +28,15 @@ export class MessagingModule {
       imports: [ConfigModule],
       providers: [
         {
-          provide: "MESSAGING_ENABLED",
+          provide: 'MESSAGING_ENABLED',
           useFactory: (configService: ConfigService) =>
-            configService.get<boolean>("config.features.enableMessaging") ??
-            false,
+            configService.get<boolean>('config.features.enableMessaging') ?? false,
           inject: [ConfigService],
         },
         {
           provide: RedisService,
           useFactory: (configService: ConfigService) => {
-            const enabled =
-              configService.get<boolean>("config.features.enableMessaging") ??
-              false;
+            const enabled = configService.get<boolean>('config.features.enableMessaging') ?? false
             if (!enabled) {
               // Return a no-op service when messaging is disabled
               return {
@@ -47,56 +44,46 @@ export class MessagingModule {
                 isHealthy: () => false,
                 ping: async () => false,
                 onModuleDestroy: async () => {},
-              };
+              }
             }
-            return new RedisService(configService);
+            return new RedisService(configService)
           },
           inject: [ConfigService],
         },
         {
           provide: MessageProducerService,
-          useFactory: (
-            redisService: RedisService,
-            configService: ConfigService,
-          ) => {
-            const enabled =
-              configService.get<boolean>("config.features.enableMessaging") ??
-              false;
+          useFactory: (redisService: RedisService, configService: ConfigService) => {
+            const enabled = configService.get<boolean>('config.features.enableMessaging') ?? false
             if (!enabled) {
               // Return a no-op producer when messaging is disabled
               return {
                 publish: async () => {
                   // Silent no-op when messaging is disabled
                 },
-              };
+              }
             }
-            return new MessageProducerService(redisService);
+            return new MessageProducerService(redisService)
           },
           inject: [RedisService, ConfigService],
         },
         {
           provide: MessageConsumerService,
-          useFactory: (
-            redisService: RedisService,
-            configService: ConfigService,
-          ) => {
-            const enabled =
-              configService.get<boolean>("config.features.enableMessaging") ??
-              false;
+          useFactory: (redisService: RedisService, configService: ConfigService) => {
+            const enabled = configService.get<boolean>('config.features.enableMessaging') ?? false
             if (!enabled) {
               // Return a no-op consumer when messaging is disabled
               return {
                 subscribe: async () => {},
                 unsubscribe: async () => {},
                 onModuleDestroy: async () => {},
-              };
+              }
             }
-            return new MessageConsumerService(redisService, configService);
+            return new MessageConsumerService(redisService, configService)
           },
           inject: [RedisService, ConfigService],
         },
       ],
       exports: [RedisService, MessageProducerService, MessageConsumerService],
-    };
+    }
   }
 }
