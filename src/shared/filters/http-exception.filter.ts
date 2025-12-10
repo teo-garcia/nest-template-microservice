@@ -6,7 +6,9 @@ import {
   HttpStatus,
   Logger,
 } from "@nestjs/common";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { Prisma } from "../../generated/prisma/client";
+
+type PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
 import { Request, Response } from "express";
 
 interface ErrorResponse {
@@ -79,8 +81,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     // Handle Prisma database errors
-    if (exception instanceof PrismaClientKnownRequestError) {
-      return this.handlePrismaError(exception, timestamp, path, method);
+    if (
+      typeof exception === "object" &&
+      exception !== null &&
+      "code" in exception &&
+      "clientVersion" in exception
+    ) {
+      return this.handlePrismaError(
+        exception as PrismaClientKnownRequestError,
+        timestamp,
+        path,
+        method,
+      );
     }
 
     // Handle unknown errors
