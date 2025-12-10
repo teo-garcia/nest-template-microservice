@@ -35,6 +35,7 @@ jobs:
         if: always()
         with:
           sarif_file: "trivy-fs-results.sarif"
+          category: "trivy-fs"
 
       - name: Run Trivy vulnerability scanner on Docker image
         uses: aquasecurity/trivy-action@master
@@ -50,6 +51,7 @@ jobs:
         if: always()
         with:
           sarif_file: "trivy-docker-results.sarif"
+          category: "trivy-docker"
 
   dependency-review:
     name: Dependency Review
