@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-// eslint-disable-next-line sonarjs/deprecation -- Using deprecated APIs until @nestjs/terminus provides alternatives
 import {
   HealthCheckError,
   HealthIndicator,

@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from "@nestjs/common";
+
 import { Prisma } from "../../generated/prisma/client";
 
 type PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
