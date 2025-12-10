@@ -3,7 +3,7 @@ name: Security Scan
 on:
   schedule:
     # Run first Monday of each month at 9:00 AM UTC
-    - cron: '0 9 1-7 * 1'
+    - cron: "0 9 1-7 * 1"
   workflow_dispatch:
 
 jobs:
@@ -20,34 +20,34 @@ jobs:
       - name: Run Trivy vulnerability scanner in fs mode
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: 'trivy-fs-results.sarif'
-          category: 'trivy-fs'
+          sarif_file: "trivy-fs-results.sarif"
+          category: "trivy-fs"
 
       - name: Run Trivy vulnerability scanner on Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'config'
-          scan-ref: './docker/Dockerfile'
-          format: 'sarif'
-          output: 'trivy-docker-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "config"
+          scan-ref: "./docker/Dockerfile"
+          format: "sarif"
+          output: "trivy-docker-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Docker scan results
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: 'trivy-docker-results.sarif'
-          category: 'trivy-docker'
+          sarif_file: "trivy-docker-results.sarif"
+          category: "trivy-docker"
 
   dependency-review:
     name: Dependency Review
@@ -73,8 +73,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24'
-          cache: 'pnpm'
+          node-version: "24"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
