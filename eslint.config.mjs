@@ -7,6 +7,9 @@ export default [
   ...base,
   ...node,
   {
+    ignores: ["src/generated/**", "prisma.config.ts"],
+  },
+  {
     files: [
       "**/*.test.{js,ts}",
       "**/*.spec.{js,ts}",

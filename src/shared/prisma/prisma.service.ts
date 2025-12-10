@@ -5,7 +5,10 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+
+import { PrismaClient } from "../../generated/prisma/client";
 
 @Injectable()
 export class PrismaService
@@ -14,31 +17,42 @@ export class PrismaService
 {
   private readonly logger = new Logger(PrismaService.name);
   private readonly databaseEnabled: boolean;
+  private pool?: Pool;
+  private readonly configService: ConfigService;
 
-  constructor(private configService: ConfigService) {
+  constructor(configService: ConfigService) {
+    // Must call super() first before accessing this
     // Check if database is enabled for this microservice
     const databaseEnabled =
       configService.get<boolean>("config.database.enabled") ?? false;
     const databaseUrl = configService.get<string>("DATABASE_URL");
 
     // Only initialize Prisma if database is enabled and URL is provided
-    super(
-      databaseEnabled && databaseUrl
-        ? {
-            datasources: {
-              db: {
-                url: databaseUrl,
-              },
-            },
-            log:
-              configService.get<string>("NODE_ENV") === "development"
-                ? ["query", "info", "warn", "error"]
-                : ["error"],
-            errorFormat: "colorless",
-          }
-        : {},
-    );
+    if (databaseEnabled && databaseUrl) {
+      const pool = new Pool({
+        connectionString: databaseUrl,
+      });
 
+      const adapter = new PrismaPg(pool);
+
+      super({
+        adapter,
+        log:
+          configService.get<string>("NODE_ENV") === "development"
+            ? ["query", "info", "warn", "error"]
+            : ["error"],
+        errorFormat: "colorless",
+      });
+
+      this.pool = pool;
+    } else {
+      // For disabled database, provide minimal config
+      super({
+        adapter: new PrismaPg(new Pool({ connectionString: "" })),
+      });
+    }
+
+    this.configService = configService;
     this.databaseEnabled = databaseEnabled && !!databaseUrl;
   }
 
@@ -66,6 +80,9 @@ export class PrismaService
 
     try {
       await this.$disconnect();
+      if (this.pool) {
+        await this.pool.end();
+      }
       this.logger.log("Disconnected from database");
     } catch (error) {
       this.logger.error("Error disconnecting from database", error);
