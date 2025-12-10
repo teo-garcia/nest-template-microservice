@@ -236,7 +236,17 @@ export class MessageConsumerService implements OnModuleDestroy {
         }
       }
     } catch (error) {
-      this.logger.error("Error processing pending messages:", error);
+      // NOGROUP error is expected on first startup when stream/group doesn't exist yet
+      // The subscribe method creates the group, but there may be no pending messages
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("NOGROUP")) {
+        this.logger.debug(
+          `No pending messages for ${stream}:${consumerGroup} (group may be new)`,
+        );
+      } else {
+        this.logger.error("Error processing pending messages:", error);
+      }
     }
   }
 

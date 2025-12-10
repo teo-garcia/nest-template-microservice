@@ -89,9 +89,12 @@ export class RedisService implements OnModuleDestroy {
 
   /**
    * Check if Redis is connected
+   *
+   * Relies on ioredis internal status which accurately tracks connection state.
+   * The "ready" status means the client is connected and ready to receive commands.
    */
   isHealthy(): boolean {
-    return this.isConnected && this.client.status === "ready";
+    return this.client.status === "ready";
   }
 
   /**
