@@ -18,15 +18,15 @@ Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) eco
 
 ## ✨ Features
 
-| Category | Technologies |
-|----------|-------------|
-| **Framework** | NestJS 11 with microservice architecture |
-| **Messaging** | Redis Streams for event-driven communication |
-| **Database** | Optional Prisma ORM with PostgreSQL |
+| Category          | Technologies                                          |
+| ----------------- | ----------------------------------------------------- |
+| **Framework**     | NestJS 11 with microservice architecture              |
+| **Messaging**     | Redis Streams for event-driven communication          |
+| **Database**      | Optional Prisma ORM with PostgreSQL                   |
 | **Observability** | Health checks, Prometheus metrics, structured logging |
-| **Resilience** | Consumer groups, dead letter queues, auto-retry |
-| **Type Safety** | TypeScript with strict mode |
-| **DevOps** | Docker, GitHub Actions CI/CD |
+| **Resilience**    | Consumer groups, dead letter queues, auto-retry       |
+| **Type Safety**   | TypeScript with strict mode                           |
+| **DevOps**        | Docker, GitHub Actions CI/CD                          |
 
 ## 📋 Requirements
 
@@ -76,51 +76,51 @@ src/
 
 ## 🔧 Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm start:dev` | Start with hot reload |
-| `pnpm build` | Create production build |
-| `pnpm start:prod` | Run production server |
-| `pnpm test` | Run unit tests |
-| `pnpm test:e2e` | Run E2E tests |
-| `pnpm lint:es` | Lint and fix with ESLint |
-| `pnpm lint:ts` | TypeScript type checking |
-| `pnpm format` | Format with Prettier |
-| `pnpm db:migrate` | Run database migrations |
-| `pnpm db:generate` | Generate Prisma client |
+| Command            | Description              |
+| ------------------ | ------------------------ |
+| `pnpm start:dev`   | Start with hot reload    |
+| `pnpm build`       | Create production build  |
+| `pnpm start:prod`  | Run production server    |
+| `pnpm test`        | Run unit tests           |
+| `pnpm test:e2e`    | Run E2E tests            |
+| `pnpm lint:es`     | Lint and fix with ESLint |
+| `pnpm lint:ts`     | TypeScript type checking |
+| `pnpm format`      | Format with Prettier     |
+| `pnpm db:migrate`  | Run database migrations  |
+| `pnpm db:generate` | Generate Prisma client   |
 
 ## 📨 Messaging
 
 ### Publishing Events
 
 ```typescript
-await this.messageProducer.publish('orders:created', {
-  orderId: '123',
-  userId: 'user_456',
+await this.messageProducer.publish("orders:created", {
+  orderId: "123",
+  userId: "user_456",
   amount: 99.99,
-})
+});
 ```
 
 ### Consuming Events
 
 ```typescript
 await this.messageConsumer.subscribe(
-  'orders:created',
-  'payment-service',
+  "orders:created",
+  "payment-service",
   async (order) => {
-    await this.processPayment(order)
+    await this.processPayment(order);
   },
-)
+);
 ```
 
 ## 🏥 Health & Metrics
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /health` | Full health status |
-| `GET /health/live` | Kubernetes liveness probe |
+| Endpoint            | Description                |
+| ------------------- | -------------------------- |
+| `GET /health`       | Full health status         |
+| `GET /health/live`  | Kubernetes liveness probe  |
 | `GET /health/ready` | Kubernetes readiness probe |
-| `GET /metrics` | Prometheus metrics |
+| `GET /metrics`      | Prometheus metrics         |
 
 ## 📦 Shared Configs
 
@@ -132,11 +132,11 @@ This template uses standardized configurations from the ecosystem:
 
 ## 🔗 Related Templates
 
-| Template | Description |
-|----------|-------------|
+| Template                                                                       | Description             |
+| ------------------------------------------------------------------------------ | ----------------------- |
 | [nest-template-monolith](https://github.com/teo-garcia/nest-template-monolith) | NestJS monolith starter |
-| [react-template-next](https://github.com/teo-garcia/react-template-next) | Next.js frontend |
-| [react-template-rr](https://github.com/teo-garcia/react-template-rr) | React Router SPA |
+| [react-template-next](https://github.com/teo-garcia/react-template-next)       | Next.js frontend        |
+| [react-template-rr](https://github.com/teo-garcia/react-template-rr)           | React Router SPA        |
 
 ## 📄 License
 
