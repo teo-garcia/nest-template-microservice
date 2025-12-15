@@ -41,14 +41,10 @@ class EnvironmentVariables {
   @IsOptional()
   API_PREFIX?: string = "api";
 
-  // Database (optional for microservices)
+  // Database (required)
   @IsString()
   @IsOptional()
   DATABASE_URL?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  DATABASE_ENABLED?: boolean;
 
   // Redis (required for messaging)
   @IsString()
@@ -80,15 +76,6 @@ class EnvironmentVariables {
   @IsBoolean()
   @IsOptional()
   ENABLE_CONSOLE_LOGS?: boolean;
-
-  // Features
-  @IsBoolean()
-  @IsOptional()
-  ENABLE_MESSAGING?: boolean;
-
-  @IsBoolean()
-  @IsOptional()
-  ENABLE_CACHE?: boolean;
 }
 
 /**

@@ -2,12 +2,13 @@
 
 # NestJS Template Microservice
 
-**Production-ready NestJS microservice with Redis Streams, health checks, and metrics**
+**Production-ready NestJS microservice with Redis Streams, Prisma, health checks, and metrics**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/Node-22+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-9+-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com)
+[![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)](https://prisma.io)
 [![Redis](https://img.shields.io/badge/Redis-Streams-DC382D?logo=redis&logoColor=white)](https://redis.io)
 
 Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) ecosystem
@@ -16,17 +17,59 @@ Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) eco
 
 ---
 
+## When to Use This Template
+
+### Use the Microservice Template When:
+
+- ✅ Building distributed systems with multiple independent services
+- ✅ Need event-driven architecture with asynchronous communication
+- ✅ Services must communicate via pub/sub messaging patterns
+- ✅ Require horizontal scaling of individual service components
+- ✅ Team is comfortable with distributed systems complexity
+- ✅ Need service-to-service event propagation (e.g., order created → inventory updated → email sent)
+
+### Use the Monolith Template When:
+
+- ✅ Building MVPs, startups, or small-to-medium applications
+- ✅ Need a traditional REST API with database persistence
+- ✅ Team is new to NestJS or distributed architectures
+- ✅ Don't need service-to-service messaging or event-driven patterns
+- ✅ Want simple deployment (single container/process)
+- ✅ Starting fresh and unsure about future scaling needs
+
+**Not sure?** Start with the [monolith template](https://github.com/teo-garcia/nest-template-monolith). It's easier to split a monolith into microservices later than to start with unnecessary complexity.
+
+---
+
+## Key Differences from Monolith
+
+| Feature | Monolith | Microservice |
+|---------|----------|--------------|
+| **Architecture** | Single deployable unit | Distributed services with messaging |
+| **Database** | Required (Prisma + PostgreSQL) | Required (Prisma + PostgreSQL) |
+| **Redis** | Caching only | Caching + Messaging (Streams) |
+| **Messaging** | None | Redis Streams pub/sub |
+| **Events** | None | Event publishing/consumption with retry logic |
+| **Complexity** | Lower | Higher (distributed systems challenges) |
+| **Best For** | Traditional REST APIs | Event-driven architectures |
+
+---
+
 ## Features
 
-| Category          | Technologies                                          |
-| ----------------- | ----------------------------------------------------- |
-| **Framework**     | NestJS 11 with microservice architecture              |
-| **Messaging**     | Redis Streams for event-driven communication          |
-| **Database**      | Optional Prisma ORM with PostgreSQL                   |
+| Category | Technologies |
+|----------|--------------|
+| **Framework** | NestJS 11 with modular architecture |
+| **Database** | Prisma ORM with PostgreSQL |
+| **Messaging** | Redis Streams for event-driven communication |
+| **Resilience** | Consumer groups, automatic retries, dead letter queues |
 | **Observability** | Health checks, Prometheus metrics, structured logging |
-| **Resilience**    | Consumer groups, dead letter queues, auto-retry       |
-| **Type Safety**   | TypeScript with strict mode                           |
-| **DevOps**        | Docker, GitHub Actions CI/CD                          |
+| **Type Safety** | TypeScript with strict mode |
+| **Testing** | Jest for unit and E2E tests (with mocks, no Docker required) |
+| **Code Quality** | ESLint, Prettier, Husky, Commitlint |
+| **DevOps** | Docker, GitHub Actions CI/CD |
+
+---
 
 ## Requirements
 
@@ -34,202 +77,194 @@ Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) eco
 - pnpm 9+
 - Docker & Docker Compose
 - Redis (required for messaging)
+- PostgreSQL (required for persistence)
+
+---
 
 ## Quick Start
 
 ```bash
-# Clone the template
+# 1. Clone the template
 npx degit teo-garcia/nest-template-microservice my-service
 cd my-service
 
-# Install dependencies
+# 2. Install dependencies
 pnpm install
 
-# Setup environment
-cp .env.example .env
+# 3. Setup environment
+cp .env.sample .env
+# Edit .env if needed (defaults work for local development)
 
-# Start infrastructure (Redis + optional PostgreSQL)
+# 4. Start infrastructure (Redis + PostgreSQL)
 docker-compose up -d
 
-# Generate Prisma client (if using database)
+# 5. Setup database
 pnpm db:generate
+pnpm db:migrate
 
-# Start development server
+# 6. Start development server
 pnpm start:dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your service.
+✅ Open [http://localhost:3000/api](http://localhost:3000/api) - you should see service info
 
-## Project Structure
+✅ Open [http://localhost:3000/health](http://localhost:3000/health) - health check status
 
-```
-src/
-├── config/                 # Service configuration with validation
-├── modules/
-│   └── tasks/              # Example domain module
-│       ├── controllers/    # HTTP request handlers
-│       ├── services/       # Business logic + event publishing
-│       └── dto/            # Data transfer objects + events
-└── shared/
-    ├── filters/            # Global exception handling
-    ├── health/             # Health checks (DB, Redis)
-    ├── interceptors/       # Request/response transformation
-    ├── logger/             # Structured logging (Winston)
-    ├── messaging/          # Redis Streams pub/sub
-    ├── metrics/            # Prometheus metrics
-    └── prisma/             # Database client (optional)
-```
+✅ Open [http://localhost:3000/metrics](http://localhost:3000/metrics) - Prometheus metrics
 
-## Example Module: Tasks
+---
 
-The template includes a complete `TasksModule` demonstrating:
+## Available Scripts
 
-- Full CRUD operations with Prisma
-- Event publishing on create/update/delete
-- Event consumption with consumer groups
-- Input validation with class-validator
+| Command | Description |
+|---------|-------------|
+| `pnpm start:dev` | Start with hot reload |
+| `pnpm build` | Create production build |
+| `pnpm start:prod` | Run production server |
+| `pnpm test` | Run unit tests |
+| `pnpm test:e2e` | Run E2E tests |
+| `pnpm test:cov` | Run tests with coverage |
+| `pnpm lint:es` | Lint and fix with ESLint |
+| `pnpm lint:ts` | TypeScript type checking |
+| `pnpm format` | Format with Prettier |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:generate` | Generate Prisma client |
+| `pnpm db:studio` | Open Prisma Studio |
+| `pnpm db:deploy` | Deploy migrations (production) |
 
-### API Endpoints
+---
 
-| Method | Endpoint         | Description                          |
-| ------ | ---------------- | ------------------------------------ |
-| POST   | `/api/tasks`     | Create a task (publishes event)      |
-| GET    | `/api/tasks`     | List all tasks                       |
-| GET    | `/api/tasks/:id` | Get a specific task                  |
-| PATCH  | `/api/tasks/:id` | Update a task (publishes event)      |
-| DELETE | `/api/tasks/:id` | Delete a task (publishes event)      |
+## Testing
 
-### Task Schema
+```bash
+# Run unit tests
+pnpm test
 
-```prisma
-model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  status      TaskStatus @default(PENDING)
-  priority    Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
+# Run E2E tests
+pnpm test:e2e
 
-enum TaskStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+# Run with coverage
+pnpm test:cov
 ```
 
-## Messaging
+**Test Coverage:**
+- **Unit tests**: Business logic with mocked dependencies
+- **E2E tests**: Full API flow with mocked Redis and in-memory database
+- **No Docker required**: Tests use mocks for fast CI/CD execution
+
+All tests run without external dependencies (Redis/PostgreSQL are mocked).
+
+---
+
+## Health & Observability
+
+### Health Checks
+
+- `GET /health/live` - Liveness probe (returns 200 if app is running)
+- `GET /health/ready` - Readiness probe (checks Redis + Database connectivity)
+- `GET /health` - Comprehensive health status with memory metrics
+
+### Metrics
+
+- `GET /metrics` - Prometheus metrics endpoint
+  - HTTP request count by route/method/status
+  - HTTP request duration histograms
+  - Memory usage metrics
+
+### Logging
+
+- Structured JSON logs via Winston
+- Daily log rotation
+- Request ID tracking for distributed tracing
+- Log levels: `debug`, `info`, `warn`, `error`
+
+---
+
+## Event-Driven Architecture
+
+This template implements event-driven patterns using Redis Streams:
 
 ### Publishing Events
 
-When tasks are created, updated, or deleted, events are automatically published to Redis Streams:
+When tasks are created, updated, or deleted, events are automatically published:
 
-```typescript
-// Events are published automatically by TasksService
-// Stream names: tasks:created, tasks:updated, tasks:deleted, tasks:status_changed
-```
+- `tasks:created` - New task created
+- `tasks:updated` - Task fields modified
+- `tasks:status_changed` - Task status changed
+- `tasks:deleted` - Task deleted
 
 ### Consuming Events
 
-The `TaskConsumerService` demonstrates how to subscribe to events:
+Services can subscribe to events with automatic retry and error handling:
 
-```typescript
-await this.messageConsumer.subscribe<TaskEvent>(
-  'tasks:created',
-  'my-service-consumer',
-  async (event) => {
-    // React to task creation
-    console.log(`Task created: ${event.taskId}`);
-  },
-);
-```
+- Consumer groups for load balancing across instances
+- Automatic retry (up to 3 attempts) on failure
+- Dead letter queue for permanently failed messages
+- Graceful shutdown with pending message acknowledgment
 
-### Event Types
+For detailed architecture patterns and beginner guidance, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-| Stream                 | Description                 |
-| ---------------------- | --------------------------- |
-| `tasks:created`        | New task created            |
-| `tasks:updated`        | Task fields modified        |
-| `tasks:status_changed` | Task status changed         |
-| `tasks:deleted`        | Task deleted                |
+---
 
-## Scripts
+## Deployment
 
-| Command            | Description              |
-| ------------------ | ------------------------ |
-| `pnpm start:dev`   | Start with hot reload    |
-| `pnpm build`       | Create production build  |
-| `pnpm start:prod`  | Run production server    |
-| `pnpm test`        | Run unit tests           |
-| `pnpm test:e2e`    | Run E2E tests            |
-| `pnpm lint:es`     | Lint and fix with ESLint |
-| `pnpm lint:ts`     | TypeScript type checking |
-| `pnpm format`      | Format with Prettier     |
-| `pnpm db:migrate`  | Run database migrations  |
-| `pnpm db:generate` | Generate Prisma client   |
-
-## Health & Metrics
-
-| Endpoint            | Description                |
-| ------------------- | -------------------------- |
-| `GET /health`       | Full health status         |
-| `GET /health/live`  | Kubernetes liveness probe  |
-| `GET /health/ready` | Kubernetes readiness probe |
-| `GET /metrics`      | Prometheus metrics         |
-
-## Configuration
-
-Environment variables are validated at startup. Key configuration:
-
-| Variable           | Description                | Default     |
-| ------------------ | -------------------------- | ----------- |
-| `PORT`             | Application port           | 3000        |
-| `SERVICE_NAME`     | Service identifier         | microservice|
-| `DATABASE_URL`     | PostgreSQL connection URL  | Optional    |
-| `DATABASE_ENABLED` | Enable database            | false       |
-| `REDIS_HOST`       | Redis host                 | localhost   |
-| `REDIS_PORT`       | Redis port                 | 6379        |
-| `REDIS_PASSWORD`   | Redis password             | (none)      |
-| `ENABLE_MESSAGING` | Enable Redis pub/sub       | false       |
-| `LOG_LEVEL`        | Logging level              | info        |
-
-## Docker Compose Profiles
+### Docker
 
 ```bash
-# Basic (Redis only, no database)
-docker-compose up
+# Build production image
+docker build -f docker/Dockerfile -t my-service:latest .
 
-# With database
-docker-compose --profile with-db up
+# Run with docker-compose
+docker-compose up -d
 
-# With UI tools (Redis Commander)
-docker-compose --profile with-ui up
-
-# Full stack
-docker-compose --profile with-db --profile with-ui up
+# Check logs
+docker-compose logs -f app
 ```
 
-## Shared Configs
+### Environment Variables
 
-This template uses standardized configurations from the ecosystem:
+Key configuration (see `.env.sample` for full list):
 
-- [`@teo-garcia/eslint-config-shared`](https://github.com/teo-garcia/eslint-config-shared) - ESLint rules
-- [`@teo-garcia/prettier-config-shared`](https://github.com/teo-garcia/prettier-config-shared) - Prettier formatting
-- [`@teo-garcia/tsconfig-shared`](https://github.com/teo-garcia/tsconfig-shared) - TypeScript settings
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SERVICE_NAME` | Service identifier for tracing | `microservice` |
+| `PORT` | Application port | `3000` |
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `REDIS_HOST` | Redis server host | `localhost` |
+| `REDIS_PORT` | Redis server port | `6379` |
+| `LOG_LEVEL` | Logging verbosity | `info` |
+| `METRICS_ENABLED` | Enable Prometheus metrics | `true` |
+
+---
+
+## Shared Configuration Packages
+
+This template uses shared configs from the @teo-garcia ecosystem:
+
+- [@teo-garcia/eslint-config-shared](https://github.com/teo-garcia/eslint-config-shared) - ESLint rules
+- [@teo-garcia/prettier-config-shared](https://github.com/teo-garcia/prettier-config-shared) - Prettier formatting
+- [@teo-garcia/tsconfig-shared](https://github.com/teo-garcia/tsconfig-shared) - TypeScript configuration
+- [@teo-garcia/vitest-config-shared](https://github.com/teo-garcia/vitest-config-shared) - Vitest configuration
+
+---
 
 ## Related Templates
 
-| Template                                                                       | Description             |
-| ------------------------------------------------------------------------------ | ----------------------- |
-| [nest-template-monolith](https://github.com/teo-garcia/nest-template-monolith) | NestJS monolith starter |
-| [react-template-next](https://github.com/teo-garcia/react-template-next)       | Next.js frontend        |
-| [react-template-rr](https://github.com/teo-garcia/react-template-rr)           | React Router SPA        |
+- [nest-template-monolith](https://github.com/teo-garcia/nest-template-monolith) - Traditional NestJS REST API
+- [react-template-next](https://github.com/teo-garcia/react-template-next) - Next.js frontend
+- [react-template-rr](https://github.com/teo-garcia/react-template-rr) - React Router SPA
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
 
 ## License
 
-MIT
+MIT - see [LICENSE](LICENSE)
 
 ---
 

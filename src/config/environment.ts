@@ -22,12 +22,10 @@ export default registerAs('config', () => ({
     apiPrefix: process.env.API_PREFIX || 'api',
   },
 
-  // Database Configuration (Optional - not all microservices need a database)
-  // Some microservices are stateless or share a database
+  // Database Configuration
+  // Required for this microservice template
   database: {
     url: process.env.DATABASE_URL,
-    // Enable if service needs its own database
-    enabled: process.env.DATABASE_ENABLED === 'true',
   },
 
   // Redis Configuration
@@ -64,12 +62,4 @@ export default registerAs('config', () => ({
     // paymentService: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3002',
   },
 
-  // Feature Flags
-  // Toggle features without redeploying
-  features: {
-    // Messaging disabled by default for simpler local development
-    // Set ENABLE_MESSAGING=true to activate Redis-based pub/sub
-    enableMessaging: process.env.ENABLE_MESSAGING === 'true',
-    enableCache: process.env.ENABLE_CACHE === 'true',
-  },
 }))

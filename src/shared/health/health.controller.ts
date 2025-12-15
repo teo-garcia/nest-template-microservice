@@ -1,9 +1,7 @@
 import { Controller, Get } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import {
   HealthCheck,
   HealthCheckService,
-  HealthIndicatorFunction,
   MemoryHealthIndicator,
   PrismaHealthIndicator,
 } from '@nestjs/terminus'
@@ -24,23 +22,13 @@ import { RedisHealthIndicator } from './redis.health'
  */
 @Controller('health')
 export class HealthController {
-  private readonly databaseEnabled: boolean
-  private readonly messagingEnabled: boolean
-
   constructor(
     private health: HealthCheckService,
     private memory: MemoryHealthIndicator,
     private redis: RedisHealthIndicator,
     private prismaHealth: PrismaHealthIndicator,
     private prisma: PrismaService,
-    private configService: ConfigService
-  ) {
-    // Check if database is enabled for this microservice
-    this.databaseEnabled = this.configService.get<boolean>('config.database.enabled') ?? false
-    // Check if messaging (Redis) is enabled
-    this.messagingEnabled =
-      this.configService.get<boolean>('config.features.enableMessaging') ?? false
-  }
+  ) {}
 
   /**
    * Liveness Probe
@@ -69,25 +57,13 @@ export class HealthController {
   @Get('ready')
   @HealthCheck()
   checkReadiness() {
-    const checks: HealthIndicatorFunction[] = []
-
-    // Only check Redis if messaging is enabled
-    if (this.messagingEnabled) {
-      checks.push(() => this.redis.isHealthy('redis'))
-    }
-
-    // Only check database if it's enabled for this service
-    if (this.databaseEnabled) {
+    return this.health.check([
+      // Check Redis (required for messaging)
+      () => this.redis.isHealthy('redis'),
+      // Check Database (required for data persistence)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma as any))
-    }
-
-    // If no external deps, just return OK
-    if (checks.length === 0) {
-      checks.push(() => Promise.resolve({ app: { status: 'up' as const } }))
-    }
-
-    return this.health.check(checks)
+      () => this.prismaHealth.pingCheck('database', this.prisma as any),
+    ])
   }
 
   /**
@@ -100,24 +76,15 @@ export class HealthController {
   @Get()
   @HealthCheck()
   check() {
-    // Build health checks dynamically based on enabled features
-    const checks: HealthIndicatorFunction[] = [
-      // Memory checks (always included)
+    return this.health.check([
+      // Memory checks
       () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
       () => this.memory.checkRSS('memory_rss', 500 * 1024 * 1024),
-    ]
-
-    // Redis check (only if messaging is enabled)
-    if (this.messagingEnabled) {
-      checks.push(() => this.redis.isHealthy('redis'))
-    }
-
-    // Database check (only if database is enabled)
-    if (this.databaseEnabled) {
+      // Redis check (required for messaging)
+      () => this.redis.isHealthy('redis'),
+      // Database check (required for data persistence)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      checks.push(() => this.prismaHealth.pingCheck('database', this.prisma as any))
-    }
-
-    return this.health.check(checks)
+      () => this.prismaHealth.pingCheck('database', this.prisma as any),
+    ])
   }
 }

@@ -5,7 +5,12 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from '../src/app.module'
+import { RedisHealthIndicator } from '../src/shared/health/redis.health'
+import { MessageConsumerService } from '../src/shared/messaging/message-consumer.service'
+import { MessageProducerService } from '../src/shared/messaging/message-producer.service'
+import { RedisService } from '../src/shared/messaging/redis.service'
 import { GlobalValidationPipe } from '../src/shared/pipes'
+import { PrismaService } from '../src/shared/prisma'
 
 /**
  * E2E Tests
@@ -15,7 +20,10 @@ import { GlobalValidationPipe } from '../src/shared/pipes'
  * - Health checks
  * - Metrics
  * - Input validation
- * - Event publishing (verified via logs in real scenarios)
+ * - Event publishing (mocked for fast tests without external dependencies)
+ *
+ * Note: Redis dependencies are mocked to enable tests to run without Docker.
+ * For integration tests with real Redis, run `docker-compose up -d` and test manually.
  */
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>
@@ -23,7 +31,83 @@ describe('AppController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile()
+    })
+      // Mock Redis dependencies to avoid requiring external services in tests
+      .overrideProvider(RedisService)
+      .useValue({
+        getClient: () => null,
+        isHealthy: () => false,
+        ping: async () => false,
+        onModuleDestroy: async () => {},
+      })
+      .overrideProvider(MessageProducerService)
+      .useValue({
+        publish: async () => 'mocked-message-id', // No-op for tests
+      })
+      .overrideProvider(MessageConsumerService)
+      .useValue({
+        subscribe: async () => {},
+        unsubscribe: async () => {},
+        onModuleDestroy: async () => {},
+      })
+      .overrideProvider(RedisHealthIndicator)
+      .useValue({
+        isHealthy: async () => ({ redis: { status: 'up' } }), // Mock health check as passing
+      })
+      .overrideProvider(PrismaService)
+      .useValue({
+        // Mock Prisma with in-memory task storage for E2E tests
+        task: (() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const tasks = new Map<string, any>()
+          let idCounter = 1
+
+          return {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            findMany: async ({ where }: { where?: any } = {}) => {
+              let results = [...tasks.values()]
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              if (where?.status) results = results.filter((t: any) => t.status === where.status)
+
+              if (where?.priority?.gte)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                results = results.filter((t: any) => t.priority >= where.priority.gte)
+              return results
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            findUnique: async ({ where }: { where: any }) => tasks.get(where.id) || null,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            create: async ({ data }: { data: any }) => {
+              const task = {
+                id: String(idCounter++),
+                ...data,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              }
+              tasks.set(task.id, task)
+              return task
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            update: async ({ where, data }: { where: any; data: any }) => {
+              const task = tasks.get(where.id)
+              if (!task) return null
+              const updated = { ...task, ...data, updatedAt: new Date() }
+              tasks.set(task.id, updated)
+              return updated
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete: async ({ where }: { where: any }) => {
+              const task = tasks.get(where.id)
+              if (!task) return null
+              tasks.delete(where.id)
+              return task
+            },
+          }
+        })(),
+        $queryRawUnsafe: async () => [{ 1: 1 }], // Mock database ping for health checks
+        onModuleDestroy: async () => {},
+      })
+      .compile()
 
     app = moduleFixture.createNestApplication()
 

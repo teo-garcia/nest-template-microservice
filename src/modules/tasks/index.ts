@@ -1,4 +1,4 @@
-export * from './tasks.module'
-export * from './services'
 export * from './controllers'
 export * from './dto'
+export * from './services'
+export * from './tasks.module'

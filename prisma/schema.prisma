@@ -3,10 +3,6 @@
 // This file is optional for microservices. Not all microservices need their own database.
 // Some are stateless, some share a database, and some have their own isolated database.
 //
-// To enable database support:
-// 1. Set DATABASE_ENABLED=true in your environment
-// 2. Provide DATABASE_URL connection string
-// 3. Run: pnpm db:generate && pnpm db:migrate
 
 generator client {
   provider = "prisma-client"
@@ -18,9 +14,8 @@ datasource db {
 }
 
 // Task Model
-// A simple entity demonstrating CRUD operations with event publishing
 model Task {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String?
   status      TaskStatus @default(PENDING)
