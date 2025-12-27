@@ -46,8 +46,9 @@ async function bootstrap(): Promise<void> {
 
   // Enable CORS for microservice architecture
   // In production, configure specific origins
+  const corsOrigin = configService.get<string>('config.cors.origin') ?? '*'
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: corsOrigin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
   })

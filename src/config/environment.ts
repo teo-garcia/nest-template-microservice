@@ -47,6 +47,11 @@ export default registerAs('config', () => ({
     enabled: process.env.METRICS_ENABLED !== 'false', // Enabled by default
   },
 
+  // CORS Configuration
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+  },
+
   // Logging Configuration
   logging: {
     level: process.env.LOG_LEVEL || 'info',

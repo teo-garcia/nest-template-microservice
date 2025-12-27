@@ -68,6 +68,11 @@ class EnvironmentVariables {
   @IsOptional()
   METRICS_ENABLED?: boolean;
 
+  // CORS
+  @IsString()
+  @IsOptional()
+  CORS_ORIGIN?: string;
+
   // Logging
   @IsString()
   @IsOptional()
