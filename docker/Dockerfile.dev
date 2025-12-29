@@ -15,9 +15,9 @@ COPY package.json pnpm-lock.yaml ./
 # Install all dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy prisma schema
-COPY prisma ./prisma 2>/dev/null || :
-RUN pnpm db:generate 2>/dev/null || echo "Skipping Prisma generation"
+# Copy prisma schema and generate client
+COPY prisma ./prisma
+RUN pnpm db:generate
 
 # Copy source code
 # In development, this is mounted as a volume for hot reload

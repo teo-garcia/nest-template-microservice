@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
 import { MessageConsumerService } from '../../../shared/messaging'
-import { TaskEvent } from '../dto'
+import { isTaskEvent, TaskEvent } from '../dto'
 
 /**
  * Task Consumer Service
@@ -52,28 +52,44 @@ export class TaskConsumerService implements OnModuleInit {
     await this.messageConsumer.subscribe<TaskEvent>(
       'tasks:created',
       `${this.serviceName}-created-consumer`,
-      async (event) => this.handleTaskCreated(event)
+      async (event) => this.handleTaskCreated(event),
+      {
+        validate: isTaskEvent,
+        idempotency: { ttlSeconds: 86_400 },
+      }
     )
 
     // Subscribe to task updated events
     await this.messageConsumer.subscribe<TaskEvent>(
       'tasks:updated',
       `${this.serviceName}-updated-consumer`,
-      async (event) => this.handleTaskUpdated(event)
+      async (event) => this.handleTaskUpdated(event),
+      {
+        validate: isTaskEvent,
+        idempotency: { ttlSeconds: 86_400 },
+      }
     )
 
     // Subscribe to task status changed events
     await this.messageConsumer.subscribe<TaskEvent>(
       'tasks:status_changed',
       `${this.serviceName}-status-consumer`,
-      async (event) => this.handleTaskStatusChanged(event)
+      async (event) => this.handleTaskStatusChanged(event),
+      {
+        validate: isTaskEvent,
+        idempotency: { ttlSeconds: 86_400 },
+      }
     )
 
     // Subscribe to task deleted events
     await this.messageConsumer.subscribe<TaskEvent>(
       'tasks:deleted',
       `${this.serviceName}-deleted-consumer`,
-      async (event) => this.handleTaskDeleted(event)
+      async (event) => this.handleTaskDeleted(event),
+      {
+        validate: isTaskEvent,
+        idempotency: { ttlSeconds: 86_400 },
+      }
     )
 
     this.logger.log('Task event consumers initialized')

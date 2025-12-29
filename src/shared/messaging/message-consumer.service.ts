@@ -12,6 +12,16 @@ export interface MessageHandler<T = unknown> {
   handle(message: T): Promise<void>
 }
 
+export type MessageValidator<T> = (message: unknown) => message is T
+
+export type MessageConsumerOptions<T> = {
+  validate?: MessageValidator<T>
+  idempotency?: {
+    ttlSeconds?: number
+    keyField?: string
+  }
+}
+
 /**
  * Message Consumer Service
  *
@@ -59,9 +69,15 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     handler: (message: T) => Promise<void>,
-    consumerName?: string
+    consumerNameOrOptions?: string | MessageConsumerOptions<T>,
+    optionsArg?: MessageConsumerOptions<T>
   ): Promise<void> {
     const client = this.redisService.getClient()
+    const consumerName =
+      typeof consumerNameOrOptions === 'string' ? consumerNameOrOptions : undefined
+    const options =
+      typeof consumerNameOrOptions === 'string' ? optionsArg : consumerNameOrOptions
+
     const consumer =
       consumerName || `${this.configService.get('config.service.name')}-${Date.now()}`
 
@@ -85,7 +101,7 @@ export class MessageConsumerService implements OnModuleDestroy {
     this.logger.log(`Consumer ${consumer} subscribing to ${stream} in group ${consumerGroup}`)
 
     // Start consuming messages
-    this.consumeMessages(stream, consumerGroup, consumer, handler)
+    this.consumeMessages(stream, consumerGroup, consumer, handler, options)
   }
 
   /**
@@ -95,17 +111,18 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     consumer: string,
-    handler: (message: T) => Promise<void>
+    handler: (message: T) => Promise<void>,
+    options?: MessageConsumerOptions<T>
   ): Promise<void> {
     const consumerKey = `${stream}:${consumerGroup}:${consumer}`
 
     while (this.consumers.get(consumerKey) && !this.isShuttingDown) {
       try {
         // First, process any pending messages that weren't acknowledged
-        await this.processPendingMessages(stream, consumerGroup, consumer, handler)
+        await this.processPendingMessages(stream, consumerGroup, consumer, handler, options)
 
         // Read and process new messages
-        await this.readAndProcessNewMessages(stream, consumerGroup, consumer, handler)
+        await this.readAndProcessNewMessages(stream, consumerGroup, consumer, handler, options)
       } catch (error) {
         await this.handleConsumeError(stream, error)
       }
@@ -121,7 +138,8 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     consumer: string,
-    handler: (message: T) => Promise<void>
+    handler: (message: T) => Promise<void>,
+    options?: MessageConsumerOptions<T>
   ): Promise<void> {
     const client = this.redisService.getClient()
 
@@ -146,7 +164,7 @@ export class MessageConsumerService implements OnModuleDestroy {
     if (results && results.length > 0) {
       for (const [, messages] of results) {
         for (const [messageId, fields] of messages) {
-          await this.processMessage(stream, consumerGroup, messageId, fields, handler)
+          await this.processMessage(stream, consumerGroup, messageId, fields, handler, options)
         }
       }
     }
@@ -170,7 +188,8 @@ export class MessageConsumerService implements OnModuleDestroy {
     stream: string,
     consumerGroup: string,
     consumer: string,
-    handler: (message: T) => Promise<void>
+    handler: (message: T) => Promise<void>,
+    options?: MessageConsumerOptions<T>
   ): Promise<void> {
     const client = this.redisService.getClient()
 
@@ -200,7 +219,7 @@ export class MessageConsumerService implements OnModuleDestroy {
 
           if (claimed && claimed.length > 0) {
             const [, fields] = claimed[0]
-            await this.processMessage(stream, consumerGroup, messageId, fields, handler)
+            await this.processMessage(stream, consumerGroup, messageId, fields, handler, options)
           }
         }
       }
@@ -225,6 +244,7 @@ export class MessageConsumerService implements OnModuleDestroy {
     messageId: string,
     fields: string[],
     handler: (message: T) => Promise<void>,
+    options?: MessageConsumerOptions<T>,
     retryCount = 0
   ): Promise<void> {
     const client = this.redisService.getClient()
@@ -238,14 +258,33 @@ export class MessageConsumerService implements OnModuleDestroy {
         throw new Error('Invalid message format: missing data field')
       }
 
-      const messageData = JSON.parse(fields[dataIndex + 1]) as T
+      const messageData = JSON.parse(fields[dataIndex + 1]) as unknown
+      const payload = messageData as T
+      const validate = options?.validate
+
+      if (validate && !validate(payload)) {
+        throw new Error('Invalid message payload')
+      }
+
+      const idempotencyKey = this.getIdempotencyKey(stream, messageId, fields, options)
+
+      if (idempotencyKey && (await this.isDuplicate(idempotencyKey))) {
+        await client.xack(stream, consumerGroup, messageId)
+        this.logger.warn(`Skipped duplicate message ${messageId} from ${stream}`)
+        return
+      }
 
       // Process the message
-      await handler(messageData)
+      await handler(payload)
 
       // Acknowledge successful processing
       await client.xack(stream, consumerGroup, messageId)
       this.logger.debug(`Acknowledged message ${messageId} from ${stream}`)
+
+      if (idempotencyKey) {
+        const ttlSeconds = options?.idempotency?.ttlSeconds ?? 86_400
+        await this.markProcessed(idempotencyKey, ttlSeconds)
+      }
     } catch (error) {
       this.logger.error(
         `Error processing message ${messageId} from ${stream} (attempt ${retryCount + 1}):`,
@@ -259,7 +298,15 @@ export class MessageConsumerService implements OnModuleDestroy {
           `Retrying message ${messageId} in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`
         )
         await new Promise((resolve) => setTimeout(resolve, delay))
-        await this.processMessage(stream, consumerGroup, messageId, fields, handler, retryCount + 1)
+        await this.processMessage(
+          stream,
+          consumerGroup,
+          messageId,
+          fields,
+          handler,
+          options,
+          retryCount + 1
+        )
       } else {
         // Move to dead letter queue after max retries
         await this.moveToDeadLetterQueue(stream, messageId, fields, error)
@@ -267,6 +314,36 @@ export class MessageConsumerService implements OnModuleDestroy {
         await client.xack(stream, consumerGroup, messageId)
       }
     }
+  }
+
+  private getIdempotencyKey(
+    stream: string,
+    messageId: string,
+    fields: string[],
+    options?: MessageConsumerOptions<unknown>
+  ): string | null {
+    if (!options?.idempotency) {
+      return null
+    }
+
+    const keyField = options.idempotency.keyField ?? 'idempotencyKey'
+    const keyIndex = fields.indexOf(keyField)
+    const rawKey =
+      keyIndex !== -1 && keyIndex + 1 < fields.length ? fields[keyIndex + 1] : undefined
+    const suffix = rawKey && rawKey.length > 0 ? rawKey : messageId
+
+    return `idempotency:${stream}:${suffix}`
+  }
+
+  private async isDuplicate(idempotencyKey: string): Promise<boolean> {
+    const client = this.redisService.getClient()
+    const existing = await client.get(idempotencyKey)
+    return existing != null
+  }
+
+  private async markProcessed(idempotencyKey: string, ttlSeconds: number): Promise<void> {
+    const client = this.redisService.getClient()
+    await client.set(idempotencyKey, '1', 'EX', ttlSeconds)
   }
 
   /**

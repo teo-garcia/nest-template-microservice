@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { TaskStatus } from '../../../generated/prisma/client'
 
 /**
@@ -13,6 +15,11 @@ import { TaskStatus } from '../../../generated/prisma/client'
  * - tasks:status_changed - When task status changes (subset of updated)
  */
 export class TaskEvent {
+  /**
+   * Event ID for idempotency and tracing
+   */
+  eventId: string
+
   /**
    * Event type identifier
    */
@@ -55,5 +62,33 @@ export class TaskEvent {
 
   constructor(partial: Partial<TaskEvent>) {
     Object.assign(this, partial)
+    this.eventId = partial.eventId ?? randomUUID()
   }
+}
+
+export const isTaskEvent = (value: unknown): value is TaskEvent => {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const event = value as Record<string, unknown>
+  const eventType = event.eventType
+  const isValidType =
+    eventType === 'created' ||
+    eventType === 'updated' ||
+    eventType === 'deleted' ||
+    eventType === 'status_changed'
+
+  const hasTimestamp =
+    typeof event.timestamp === 'string' || event.timestamp instanceof Date
+
+  return (
+    typeof event.eventId === 'string' &&
+    isValidType &&
+    typeof event.taskId === 'string' &&
+    typeof event.title === 'string' &&
+    typeof event.status === 'string' &&
+    typeof event.priority === 'number' &&
+    hasTimestamp
+  )
 }

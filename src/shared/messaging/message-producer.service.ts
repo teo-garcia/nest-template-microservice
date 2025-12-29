@@ -27,6 +27,43 @@ export class MessageProducerService {
 
   constructor(private readonly redisService: RedisService) {}
 
+  private resolvePublishOptions(
+    maxLengthOrOptions?: number | PublishOptions,
+  ): PublishOptions {
+    if (typeof maxLengthOrOptions === "number") {
+      return { maxLength: maxLengthOrOptions };
+    }
+
+    return maxLengthOrOptions ?? {};
+  }
+
+  private buildMessageFields<T>(data: T, options: PublishOptions): string[] {
+    const fields: string[] = [
+      "data",
+      JSON.stringify(data),
+      "timestamp",
+      Date.now().toString(),
+    ];
+
+    if (options.idempotencyKey) {
+      fields.push("idempotencyKey", options.idempotencyKey);
+    }
+
+    if (options.schemaVersion != undefined) {
+      fields.push("schemaVersion", String(options.schemaVersion));
+    }
+
+    if (options.eventType) {
+      fields.push("eventType", options.eventType);
+    }
+
+    if (options.source) {
+      fields.push("source", options.source);
+    }
+
+    return fields;
+  }
+
   /**
    * Publish a message to a Redis Stream
    *
@@ -38,18 +75,13 @@ export class MessageProducerService {
   async publish<T = unknown>(
     stream: string,
     data: T,
-    maxLength = 10_000,
+    maxLengthOrOptions?: number | PublishOptions,
   ): Promise<string> {
     try {
       const client = this.redisService.getClient();
-
-      // Prepare message data
-      // Redis Streams store data as field-value pairs
-      // We use a single 'data' field with JSON serialized payload
-      const messageData = {
-        data: JSON.stringify(data),
-        timestamp: Date.now().toString(),
-      };
+      const options = this.resolvePublishOptions(maxLengthOrOptions);
+      const maxLength = options.maxLength ?? 10_000;
+      const fields = this.buildMessageFields(data, options);
 
       // XADD command adds a message to the stream
       // MAXLEN ~ keeps stream size manageable (approximate trimming for performance)
@@ -60,10 +92,7 @@ export class MessageProducerService {
         "~",
         maxLength,
         "*",
-        "data",
-        messageData.data,
-        "timestamp",
-        messageData.timestamp,
+        ...fields,
       );
 
       this.logger.debug(`Published message to ${stream}: ${messageId}`);
@@ -84,28 +113,29 @@ export class MessageProducerService {
   async publishBatch<T = unknown>(
     stream: string,
     messages: T[],
+    options: PublishBatchOptions<T> = {},
   ): Promise<string[]> {
     try {
       const client = this.redisService.getClient();
       const pipeline = client.pipeline();
+      const maxLength = options.maxLength ?? 10_000;
 
       // Add all messages to the pipeline
       for (const data of messages) {
-        const messageData = {
-          data: JSON.stringify(data),
-          timestamp: Date.now().toString(),
-        };
+        const messageFields = this.buildMessageFields(data, {
+          idempotencyKey: options.idempotencyKey?.(data),
+          schemaVersion: options.schemaVersion,
+          eventType: options.eventType,
+          source: options.source,
+        });
 
         pipeline.xadd(
           stream,
           "MAXLEN",
           "~",
-          10_000,
+          maxLength,
           "*",
-          "data",
-          messageData.data,
-          "timestamp",
-          messageData.timestamp,
+          ...messageFields,
         );
       }
 
@@ -134,3 +164,19 @@ export class MessageProducerService {
     }
   }
 }
+
+type PublishOptions = {
+  maxLength?: number;
+  idempotencyKey?: string;
+  schemaVersion?: number;
+  eventType?: string;
+  source?: string;
+};
+
+type PublishBatchOptions<T> = {
+  maxLength?: number;
+  idempotencyKey?: (data: T) => string;
+  schemaVersion?: number;
+  eventType?: string;
+  source?: string;
+};

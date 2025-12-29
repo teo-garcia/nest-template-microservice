@@ -25,6 +25,7 @@ import { CreateTaskDto, TaskEvent, UpdateTaskDto } from '../dto'
 export class TasksService {
   private readonly logger = new Logger(TasksService.name)
   private readonly databaseEnabled: boolean
+  private readonly serviceName: string
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,6 +33,7 @@ export class TasksService {
     private readonly configService: ConfigService
   ) {
     this.databaseEnabled = this.configService.get<boolean>('config.database.enabled') ?? false
+    this.serviceName = this.configService.get<string>('config.service.name') ?? 'microservice'
   }
 
   /**
@@ -208,7 +210,12 @@ export class TasksService {
     const stream = `tasks:${event.eventType}`
 
     try {
-      await this.messageProducer.publish(stream, event)
+      await this.messageProducer.publish(stream, event, {
+        idempotencyKey: event.eventId,
+        schemaVersion: 1,
+        eventType: event.eventType,
+        source: this.serviceName,
+      })
       this.logger.debug(`Published ${stream} event for task ${event.taskId}`)
     } catch (error) {
       // Log but don't throw - event publishing shouldn't break the main operation
