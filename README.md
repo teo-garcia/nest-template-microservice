@@ -142,7 +142,15 @@ All tests run without external dependencies (Redis/PostgreSQL are mocked).
 
 ---
 
-## Event-Driven Architecture
+## Architecture Notes
+
+### Service Model
+
+- Single service intended to run independently
+- Communication is via events, not direct calls
+- Redis Streams is required for messaging
+
+### Event-Driven Architecture
 
 This template implements event-driven patterns using Redis Streams:
 
@@ -183,9 +191,9 @@ docker-compose up -d
 docker-compose logs -f app
 ```
 
-### Environment Variables
+## Environment Variables
 
-Key configuration (see `.env.sample` for full list):
+Key configuration (see `.env.example` for full list):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
