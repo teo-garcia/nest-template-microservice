@@ -80,8 +80,21 @@ export class HealthController {
       // Memory checks
       () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
       () => this.memory.checkRSS('memory_rss', 500 * 1024 * 1024),
-      // Redis check (required for messaging)
-      () => this.redis.isHealthy('redis'),
+      // Redis check (soft failure for /health)
+      async () => {
+        try {
+          return await this.redis.isHealthy('redis')
+        } catch (error) {
+          return {
+            redis: {
+              status: 'up',
+              degraded: true,
+              message:
+                error instanceof Error ? error.message : 'Redis check failed',
+            },
+          }
+        }
+      },
       // Database check (required for data persistence)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.prismaHealth.pingCheck('database', this.prisma as any),

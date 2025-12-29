@@ -25,6 +25,90 @@ import { PrismaService } from '../src/shared/prisma'
  * Note: Redis dependencies are mocked to enable tests to run without Docker.
  * For integration tests with real Redis, run `docker-compose up -d` and test manually.
  */
+type TaskRecord = {
+  id: string
+  status?: string
+  priority?: number
+  createdAt: Date
+  updatedAt: Date
+  [key: string]: unknown
+}
+
+type TaskWhere = {
+  status?: string
+  priority?: { gte?: number }
+}
+
+type TaskCreateInput = {
+  status?: string
+  priority?: number
+  [key: string]: unknown
+}
+
+const createTaskStore = () => {
+  const tasks = new Map<string, TaskRecord>()
+  let idCounter = 1
+
+  const findMany = async ({ where }: { where?: TaskWhere } = {}) => {
+    let results = [...tasks.values()]
+
+    if (where?.status) {
+      results = results.filter((task) => task.status === where.status)
+    }
+
+    if (where?.priority?.gte != undefined) {
+      const minPriority = where.priority.gte
+      results = results.filter((task) => (task.priority ?? 0) >= minPriority)
+    }
+
+    return results
+  }
+
+  const findUnique = async ({ where }: { where: { id: string } }) => {
+    return tasks.get(where.id) ?? null
+  }
+
+  const create = async ({ data }: { data: TaskCreateInput }) => {
+    const task: TaskRecord = {
+      id: String(idCounter++),
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    tasks.set(task.id, task)
+    return task
+  }
+
+  const update = async ({
+    where,
+    data,
+  }: {
+    where: { id: string }
+    data: Partial<TaskRecord>
+  }) => {
+    const task = tasks.get(where.id)
+    if (!task) return null
+    const updated: TaskRecord = { ...task, ...data, updatedAt: new Date() }
+    tasks.set(updated.id, updated)
+    return updated
+  }
+
+  const remove = async ({ where }: { where: { id: string } }) => {
+    const task = tasks.get(where.id)
+    if (!task) return null
+    tasks.delete(where.id)
+    return task
+  }
+
+  return {
+    findMany,
+    findUnique,
+    create,
+    update,
+    delete: remove,
+  }
+}
+
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>
 
@@ -57,53 +141,7 @@ describe('AppController (e2e)', () => {
       .overrideProvider(PrismaService)
       .useValue({
         // Mock Prisma with in-memory task storage for E2E tests
-        task: (() => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const tasks = new Map<string, any>()
-          let idCounter = 1
-
-          return {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            findMany: async ({ where }: { where?: any } = {}) => {
-              let results = [...tasks.values()]
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              if (where?.status) results = results.filter((t: any) => t.status === where.status)
-
-              if (where?.priority?.gte)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                results = results.filter((t: any) => t.priority >= where.priority.gte)
-              return results
-            },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            findUnique: async ({ where }: { where: any }) => tasks.get(where.id) || null,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            create: async ({ data }: { data: any }) => {
-              const task = {
-                id: String(idCounter++),
-                ...data,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              }
-              tasks.set(task.id, task)
-              return task
-            },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            update: async ({ where, data }: { where: any; data: any }) => {
-              const task = tasks.get(where.id)
-              if (!task) return null
-              const updated = { ...task, ...data, updatedAt: new Date() }
-              tasks.set(task.id, updated)
-              return updated
-            },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delete: async ({ where }: { where: any }) => {
-              const task = tasks.get(where.id)
-              if (!task) return null
-              tasks.delete(where.id)
-              return task
-            },
-          }
-        })(),
+        task: createTaskStore(),
         $queryRawUnsafe: async () => [{ 1: 1 }], // Mock database ping for health checks
         onModuleDestroy: async () => {},
       })

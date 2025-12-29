@@ -5,6 +5,7 @@ import {
   Logger,
   NestInterceptor,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Request, Response } from "express";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
@@ -29,6 +30,8 @@ export class TransformInterceptor<T>
 {
   private readonly logger = new Logger(TransformInterceptor.name);
 
+  constructor(private readonly configService: ConfigService) {}
+
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -37,6 +40,13 @@ export class TransformInterceptor<T>
     const context_ = context.switchToHttp();
     const request = context_.getRequest<Request>();
     const response = context_.getResponse<Response>();
+    const env = this.configService.get<string>("config.app.env") ?? "development";
+    const version =
+      this.configService.get<string>("config.service.version") ?? "0.0.0";
+    const requestId =
+      typeof (request as { id?: unknown }).id === "string"
+        ? (request as { id?: string }).id
+        : undefined;
 
     return next.handle().pipe(
       map((data: T) => {
@@ -51,25 +61,22 @@ export class TransformInterceptor<T>
           method: request.method,
           data,
           meta: {
-            requestId: this.generateRequestId(),
-            version: "1.0",
+            requestId,
+            version,
             duration,
           },
         };
 
         // Log successful requests in development
-        if (process.env.NODE_ENV === "development") {
+        if (env === "development") {
+          const requestLabel = requestId ? ` ${requestId}` : "";
           this.logger.debug(
-            `${request.method} ${request.url} ${response.statusCode} - ${duration}ms`,
+            `${request.method} ${request.url} ${response.statusCode} - ${duration}ms${requestLabel}`,
           );
         }
 
         return transformedResponse;
       }),
     );
-  }
-
-  private generateRequestId(): string {
-    return `req_${Date.now()}_${crypto.randomUUID()}`;
   }
 }

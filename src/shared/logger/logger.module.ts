@@ -17,7 +17,7 @@ export class LoggerModule {
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
             return createLoggerConfig(
-              configService.get("NODE_ENV") || "development",
+              configService.get("config.app.env") || "development",
             );
           },
         }),
