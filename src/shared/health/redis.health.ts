@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { HealthIndicatorResult } from "@nestjs/terminus";
+import { Injectable } from '@nestjs/common'
+import { HealthIndicatorResult } from '@nestjs/terminus'
 
-import { RedisService } from "../messaging/redis.service";
+import { RedisService } from '../messaging/redis.service'
 
 /**
  * Redis Health Indicator
@@ -25,14 +25,14 @@ export class RedisHealthIndicator {
   private getStatus(
     key: string,
     isHealthy: boolean,
-    data?: Record<string, unknown>,
+    data?: Record<string, unknown>
   ): HealthIndicatorResult {
     return {
       [key]: {
-        status: isHealthy ? "up" : "down",
+        status: isHealthy ? 'up' : 'down',
         ...data,
       },
-    };
+    }
   }
 
   /**
@@ -44,22 +44,22 @@ export class RedisHealthIndicator {
    */
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     // Check if Redis client is in a healthy state
-    const isHealthy = this.redisService.isHealthy();
+    const isHealthy = this.redisService.isHealthy()
 
     if (!isHealthy) {
-      throw new Error("Redis client is not in ready state");
+      throw new Error('Redis client is not in ready state')
     }
 
     // Ping Redis to verify connectivity
-    const canPing = await this.redisService.ping();
+    const canPing = await this.redisService.ping()
 
     if (!canPing) {
-      throw new Error("Failed to ping Redis");
+      throw new Error('Failed to ping Redis')
     }
 
     // Return healthy status
     return this.getStatus(key, true, {
-      message: "Redis is healthy",
-    });
+      message: 'Redis is healthy',
+    })
   }
 }

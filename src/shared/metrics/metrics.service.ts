@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { Counter, Histogram, register, Registry } from "prom-client";
+import { Injectable } from '@nestjs/common'
+import { Counter, Histogram, register, Registry } from 'prom-client'
 
 /**
  * Metrics Service
@@ -13,42 +13,42 @@ import { Counter, Histogram, register, Registry } from "prom-client";
  */
 @Injectable()
 export class MetricsService {
-  private readonly registry: Registry;
-  private readonly httpRequestCounter: Counter<string>;
-  private readonly httpRequestDuration: Histogram<string>;
+  private readonly registry: Registry
+  private readonly httpRequestCounter: Counter<string>
+  private readonly httpRequestDuration: Histogram<string>
 
   constructor() {
     // Create a new registry for this service
     // This allows us to have isolated metrics per service in a microservice architecture
-    this.registry = new Registry();
+    this.registry = new Registry()
 
     // HTTP Request Counter
     // Counts total number of HTTP requests grouped by method, route, and status code
     // Example: http_requests_total{method="GET",route="/api/users",status="200"} 150
     this.httpRequestCounter = new Counter({
-      name: "http_requests_total",
-      help: "Total number of HTTP requests",
-      labelNames: ["method", "route", "status"],
+      name: 'http_requests_total',
+      help: 'Total number of HTTP requests',
+      labelNames: ['method', 'route', 'status'],
       registers: [this.registry],
-    });
+    })
 
     // HTTP Request Duration Histogram
     // Tracks response times with configurable buckets (in seconds)
     // Buckets: 0.005s, 0.01s, 0.025s, 0.05s, 0.1s, 0.25s, 0.5s, 1s, 2.5s, 5s, 10s
     // This allows us to calculate percentiles (p50, p95, p99) and average response times
     this.httpRequestDuration = new Histogram({
-      name: "http_request_duration_seconds",
-      help: "Duration of HTTP requests in seconds",
-      labelNames: ["method", "route", "status"],
+      name: 'http_request_duration_seconds',
+      help: 'Duration of HTTP requests in seconds',
+      labelNames: ['method', 'route', 'status'],
       buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
       registers: [this.registry],
-    });
+    })
 
     // Register default metrics (process CPU, memory, event loop lag, etc.)
     // These are useful for monitoring the Node.js process health
     register.setDefaultLabels({
-      app: "nest-monolith",
-    });
+      app: 'nest-monolith',
+    })
   }
 
   /**
@@ -63,15 +63,15 @@ export class MetricsService {
     method: string,
     route: string,
     status: number,
-    duration: number,
+    duration: number
   ): void {
-    const labels = { method, route, status: status.toString() };
+    const labels = { method, route, status: status.toString() }
 
     // Increment the request counter
-    this.httpRequestCounter.inc(labels);
+    this.httpRequestCounter.inc(labels)
 
     // Record the duration in the histogram
-    this.httpRequestDuration.observe(labels, duration);
+    this.httpRequestDuration.observe(labels, duration)
   }
 
   /**
@@ -82,7 +82,7 @@ export class MetricsService {
    */
   async getMetrics(): Promise<string> {
     // Merge application metrics with default Node.js metrics
-    return await Registry.merge([this.registry, register]).metrics();
+    return await Registry.merge([this.registry, register]).metrics()
   }
 
   /**
@@ -91,6 +91,6 @@ export class MetricsService {
    * Allows other services to register custom metrics
    */
   getRegistry(): Registry {
-    return this.registry;
+    return this.registry
   }
 }

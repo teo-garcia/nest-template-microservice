@@ -1,6 +1,6 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from '@nestjs/common'
 
-import { RedisService } from "./redis.service";
+import { RedisService } from './redis.service'
 
 /**
  * Message Producer Service
@@ -23,45 +23,45 @@ import { RedisService } from "./redis.service";
  */
 @Injectable()
 export class MessageProducerService {
-  private readonly logger = new Logger(MessageProducerService.name);
+  private readonly logger = new Logger(MessageProducerService.name)
 
   constructor(private readonly redisService: RedisService) {}
 
   private resolvePublishOptions(
-    maxLengthOrOptions?: number | PublishOptions,
+    maxLengthOrOptions?: number | PublishOptions
   ): PublishOptions {
-    if (typeof maxLengthOrOptions === "number") {
-      return { maxLength: maxLengthOrOptions };
+    if (typeof maxLengthOrOptions === 'number') {
+      return { maxLength: maxLengthOrOptions }
     }
 
-    return maxLengthOrOptions ?? {};
+    return maxLengthOrOptions ?? {}
   }
 
   private buildMessageFields<T>(data: T, options: PublishOptions): string[] {
     const fields: string[] = [
-      "data",
+      'data',
       JSON.stringify(data),
-      "timestamp",
+      'timestamp',
       Date.now().toString(),
-    ];
+    ]
 
     if (options.idempotencyKey) {
-      fields.push("idempotencyKey", options.idempotencyKey);
+      fields.push('idempotencyKey', options.idempotencyKey)
     }
 
     if (options.schemaVersion != undefined) {
-      fields.push("schemaVersion", String(options.schemaVersion));
+      fields.push('schemaVersion', String(options.schemaVersion))
     }
 
     if (options.eventType) {
-      fields.push("eventType", options.eventType);
+      fields.push('eventType', options.eventType)
     }
 
     if (options.source) {
-      fields.push("source", options.source);
+      fields.push('source', options.source)
     }
 
-    return fields;
+    return fields
   }
 
   /**
@@ -75,31 +75,31 @@ export class MessageProducerService {
   async publish<T = unknown>(
     stream: string,
     data: T,
-    maxLengthOrOptions?: number | PublishOptions,
+    maxLengthOrOptions?: number | PublishOptions
   ): Promise<string> {
     try {
-      const client = this.redisService.getClient();
-      const options = this.resolvePublishOptions(maxLengthOrOptions);
-      const maxLength = options.maxLength ?? 10_000;
-      const fields = this.buildMessageFields(data, options);
+      const client = this.redisService.getClient()
+      const options = this.resolvePublishOptions(maxLengthOrOptions)
+      const maxLength = options.maxLength ?? 10_000
+      const fields = this.buildMessageFields(data, options)
 
       // XADD command adds a message to the stream
       // MAXLEN ~ keeps stream size manageable (approximate trimming for performance)
       // * auto-generates message ID based on timestamp
       const messageId = await client.xadd(
         stream,
-        "MAXLEN",
-        "~",
+        'MAXLEN',
+        '~',
         maxLength,
-        "*",
-        ...fields,
-      );
+        '*',
+        ...fields
+      )
 
-      this.logger.debug(`Published message to ${stream}: ${messageId}`);
-      return messageId;
+      this.logger.debug(`Published message to ${stream}: ${messageId}`)
+      return messageId
     } catch (error) {
-      this.logger.error(`Failed to publish message to ${stream}:`, error);
-      throw error;
+      this.logger.error(`Failed to publish message to ${stream}:`, error)
+      throw error
     }
   }
 
@@ -113,12 +113,12 @@ export class MessageProducerService {
   async publishBatch<T = unknown>(
     stream: string,
     messages: T[],
-    options: PublishBatchOptions<T> = {},
+    options: PublishBatchOptions<T> = {}
   ): Promise<string[]> {
     try {
-      const client = this.redisService.getClient();
-      const pipeline = client.pipeline();
-      const maxLength = options.maxLength ?? 10_000;
+      const client = this.redisService.getClient()
+      const pipeline = client.pipeline()
+      const maxLength = options.maxLength ?? 10_000
 
       // Add all messages to the pipeline
       for (const data of messages) {
@@ -127,56 +127,49 @@ export class MessageProducerService {
           schemaVersion: options.schemaVersion,
           eventType: options.eventType,
           source: options.source,
-        });
+        })
 
-        pipeline.xadd(
-          stream,
-          "MAXLEN",
-          "~",
-          maxLength,
-          "*",
-          ...messageFields,
-        );
+        pipeline.xadd(stream, 'MAXLEN', '~', maxLength, '*', ...messageFields)
       }
 
       // Execute all commands at once
-      const results = await pipeline.exec();
+      const results = await pipeline.exec()
 
       if (!results) {
-        throw new Error("Pipeline execution failed");
+        throw new Error('Pipeline execution failed')
       }
 
       // Extract message IDs from results
       const messageIds = results.map((result) => {
         if (result[0]) {
-          throw result[0]; // Throw error if any command failed
+          throw result[0] // Throw error if any command failed
         }
-        return result[1] as string;
-      });
+        return result[1] as string
+      })
 
       this.logger.debug(
-        `Published ${messages.length} messages to ${stream} in batch`,
-      );
-      return messageIds;
+        `Published ${messages.length} messages to ${stream} in batch`
+      )
+      return messageIds
     } catch (error) {
-      this.logger.error(`Failed to publish batch to ${stream}:`, error);
-      throw error;
+      this.logger.error(`Failed to publish batch to ${stream}:`, error)
+      throw error
     }
   }
 }
 
 type PublishOptions = {
-  maxLength?: number;
-  idempotencyKey?: string;
-  schemaVersion?: number;
-  eventType?: string;
-  source?: string;
-};
+  maxLength?: number
+  idempotencyKey?: string
+  schemaVersion?: number
+  eventType?: string
+  source?: string
+}
 
 type PublishBatchOptions<T> = {
-  maxLength?: number;
-  idempotencyKey?: (data: T) => string;
-  schemaVersion?: number;
-  eventType?: string;
-  source?: string;
-};
+  maxLength?: number
+  idempotencyKey?: (data: T) => string
+  schemaVersion?: number
+  eventType?: string
+  source?: string
+}

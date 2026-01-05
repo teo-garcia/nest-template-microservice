@@ -3,7 +3,10 @@ import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app.module'
 import { GlobalExceptionFilter } from './shared/filters'
-import { RequestIdInterceptor, TransformInterceptor } from './shared/interceptors'
+import {
+  RequestIdInterceptor,
+  TransformInterceptor,
+} from './shared/interceptors'
 import { AppLogger } from './shared/logger/logger.service'
 import { MetricsInterceptor } from './shared/metrics'
 import { GlobalValidationPipe } from './shared/pipes'

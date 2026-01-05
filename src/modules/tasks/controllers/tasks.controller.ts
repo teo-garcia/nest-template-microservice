@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common'
 
 import { TaskStatus } from '../../../generated/prisma/client'
 import { CreateTaskDto, UpdateTaskDto } from '../dto'
@@ -59,7 +68,10 @@ export class TasksController {
    * GET /api/tasks?status=IN_PROGRESS&priority=3
    */
   @Get()
-  async findAll(@Query('status') status?: TaskStatus, @Query('priority') priority?: string) {
+  async findAll(
+    @Query('status') status?: TaskStatus,
+    @Query('priority') priority?: string
+  ) {
     // Parse priority to number if provided
     const priorityNum = priority ? Number.parseInt(priority, 10) : undefined
     return this.tasksService.findAll(status, priorityNum)

@@ -229,7 +229,9 @@ describe('AppController (e2e)', () => {
     let createdTaskId: string
 
     it('/api/tasks (GET) should return array (may be empty initially)', async () => {
-      const response = await request(app.getHttpServer()).get('/api/tasks').expect(200)
+      const response = await request(app.getHttpServer())
+        .get('/api/tasks')
+        .expect(200)
 
       expect(Array.isArray(response.body)).toBe(true)
     })
@@ -248,7 +250,10 @@ describe('AppController (e2e)', () => {
 
       expect(response.body).toHaveProperty('id')
       expect(response.body).toHaveProperty('title', createTaskDto.title)
-      expect(response.body).toHaveProperty('description', createTaskDto.description)
+      expect(response.body).toHaveProperty(
+        'description',
+        createTaskDto.description
+      )
       expect(response.body).toHaveProperty('priority', createTaskDto.priority)
       expect(response.body).toHaveProperty('status', 'PENDING')
 
@@ -348,7 +353,9 @@ describe('AppController (e2e)', () => {
     })
 
     it('/api/tasks?priority=5 (GET) should filter by priority', async () => {
-      const response = await request(app.getHttpServer()).get('/api/tasks?priority=5').expect(200)
+      const response = await request(app.getHttpServer())
+        .get('/api/tasks?priority=5')
+        .expect(200)
 
       expect(Array.isArray(response.body)).toBe(true)
       for (const task of response.body) {

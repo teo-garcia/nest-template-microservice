@@ -37,7 +37,9 @@ export class RedisService implements OnModuleDestroy {
       // Retries: 0ms, 100ms, 400ms, 900ms, 1600ms, 2500ms, 3600ms, ...
       retryStrategy: (times: number) => {
         const delay = Math.min(times * times * 100, 10_000)
-        this.logger.warn(`Retrying Redis connection in ${delay}ms (attempt ${times})`)
+        this.logger.warn(
+          `Retrying Redis connection in ${delay}ms (attempt ${times})`
+        )
         return delay
       },
 

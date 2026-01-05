@@ -66,5 +66,4 @@ export default registerAs('config', () => ({
     // userService: process.env.USER_SERVICE_URL || 'http://localhost:3001',
     // paymentService: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3002',
   },
-
 }))

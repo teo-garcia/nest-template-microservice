@@ -1,12 +1,12 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from 'node:crypto'
 
 import {
   CallHandler,
   ExecutionContext,
   Injectable,
   NestInterceptor,
-} from "@nestjs/common";
-import { Observable } from "rxjs";
+} from '@nestjs/common'
+import { Observable } from 'rxjs'
 
 /**
  * Request ID Interceptor
@@ -30,30 +30,30 @@ import { Observable } from "rxjs";
 export class RequestIdInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     // Only process HTTP requests
-    if (context.getType() !== "http") {
-      return next.handle();
+    if (context.getType() !== 'http') {
+      return next.handle()
     }
 
-    const request = context.switchToHttp().getRequest();
-    const response = context.switchToHttp().getResponse();
+    const request = context.switchToHttp().getRequest()
+    const response = context.switchToHttp().getResponse()
 
     // Extract or generate request ID
     // Check the X-Request-ID header first (common convention)
     // If not present, generate a new UUID
-    const existingRequestId = request.headers["x-request-id"];
+    const existingRequestId = request.headers['x-request-id']
     const requestId =
-      typeof existingRequestId === "string" && existingRequestId.length > 0
+      typeof existingRequestId === 'string' && existingRequestId.length > 0
         ? existingRequestId
-        : randomUUID();
+        : randomUUID()
 
     // Attach the request ID to the request object
     // This makes it accessible in controllers, services, and guards
-    request.id = requestId;
+    request.id = requestId
 
     // Include the request ID in the response headers
     // This allows clients to reference the request ID in support requests
-    response.setHeader("X-Request-ID", requestId);
+    response.setHeader('X-Request-ID', requestId)
 
-    return next.handle();
+    return next.handle()
   }
 }

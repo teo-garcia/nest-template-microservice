@@ -29,8 +29,10 @@ export class TaskConsumerService implements OnModuleInit {
     private readonly configService: ConfigService
   ) {
     this.messagingEnabled =
-      this.configService.get<boolean>('config.features.enableMessaging') ?? false
-    this.serviceName = this.configService.get<string>('config.service.name') ?? 'task-service'
+      this.configService.get<boolean>('config.features.enableMessaging') ??
+      false
+    this.serviceName =
+      this.configService.get<string>('config.service.name') ?? 'task-service'
   }
 
   /**

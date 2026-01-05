@@ -1,1 +1,1 @@
-export { GlobalExceptionFilter } from "./http-exception.filter";
+export { GlobalExceptionFilter } from './http-exception.filter'

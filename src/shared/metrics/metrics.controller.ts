@@ -1,6 +1,6 @@
-import { Controller, Get, Header } from "@nestjs/common";
+import { Controller, Get, Header } from '@nestjs/common'
 
-import { MetricsService } from "./metrics.service";
+import { MetricsService } from './metrics.service'
 
 /**
  * Metrics Controller
@@ -8,7 +8,7 @@ import { MetricsService } from "./metrics.service";
  * Exposes Prometheus-compatible metrics endpoint at /metrics.
  * This endpoint is typically scraped by Prometheus or other monitoring systems.
  */
-@Controller("metrics")
+@Controller('metrics')
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
 
@@ -29,8 +29,8 @@ export class MetricsController {
    * ...
    */
   @Get()
-  @Header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+  @Header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
   async getMetrics(): Promise<string> {
-    return await this.metricsService.getMetrics();
+    return await this.metricsService.getMetrics()
   }
 }

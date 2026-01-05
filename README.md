@@ -2,7 +2,8 @@
 
 # NestJS Template Microservice
 
-**Production-ready NestJS microservice with Redis Streams, Prisma, health checks, and metrics**
+**Production-ready NestJS microservice with Redis Streams, Prisma, health
+checks, and metrics**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/Node-22+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
@@ -11,7 +12,8 @@
 [![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)](https://prisma.io)
 [![Redis](https://img.shields.io/badge/Redis-Streams-DC382D?logo=redis&logoColor=white)](https://redis.io)
 
-Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) ecosystem
+Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates)
+ecosystem
 
 </div>
 
@@ -19,17 +21,17 @@ Part of the [@teo-garcia/templates](https://github.com/teo-garcia/templates) eco
 
 ## Features
 
-| Category | Technologies |
-|----------|--------------|
-| **Framework** | NestJS 11 with modular architecture |
-| **Database** | Prisma ORM with PostgreSQL |
-| **Messaging** | Redis Streams for event-driven communication |
-| **Resilience** | Consumer groups, automatic retries, dead letter queues |
-| **Observability** | Health checks, Prometheus metrics, structured logging |
-| **Type Safety** | TypeScript with strict mode |
-| **Testing** | Jest for unit and E2E tests (with mocks, no Docker required) |
-| **Code Quality** | ESLint, Prettier, Husky, Commitlint |
-| **DevOps** | Docker, GitHub Actions CI/CD |
+| Category          | Technologies                                                 |
+| ----------------- | ------------------------------------------------------------ |
+| **Framework**     | NestJS 11 with modular architecture                          |
+| **Database**      | Prisma ORM with PostgreSQL                                   |
+| **Messaging**     | Redis Streams for event-driven communication                 |
+| **Resilience**    | Consumer groups, automatic retries, dead letter queues       |
+| **Observability** | Health checks, Prometheus metrics, structured logging        |
+| **Type Safety**   | TypeScript with strict mode                                  |
+| **Testing**       | Jest for unit and E2E tests (with mocks, no Docker required) |
+| **Code Quality**  | ESLint, Prettier, Husky, Commitlint                          |
+| **DevOps**        | Docker, GitHub Actions CI/CD                                 |
 
 ---
 
@@ -68,31 +70,34 @@ pnpm db:migrate
 pnpm start:dev
 ```
 
-Open [http://localhost:3000/api](http://localhost:3000/api) - you should see service info
+Open [http://localhost:3000/api](http://localhost:3000/api) - you should see
+service info
 
-Open [http://localhost:3000/health](http://localhost:3000/health) - health check status
+Open [http://localhost:3000/health](http://localhost:3000/health) - health check
+status
 
-Open [http://localhost:3000/metrics](http://localhost:3000/metrics) - Prometheus metrics
+Open [http://localhost:3000/metrics](http://localhost:3000/metrics) - Prometheus
+metrics
 
 ---
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm start:dev` | Start with hot reload |
-| `pnpm build` | Create production build |
-| `pnpm start:prod` | Run production server |
-| `pnpm test` | Run unit tests |
-| `pnpm test:e2e` | Run E2E tests |
-| `pnpm test:cov` | Run tests with coverage |
-| `pnpm lint:es` | Lint and fix with ESLint |
-| `pnpm lint:ts` | TypeScript type checking |
-| `pnpm format` | Format with Prettier |
-| `pnpm db:migrate` | Run database migrations |
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:deploy` | Deploy migrations (production) |
+| Command            | Description                    |
+| ------------------ | ------------------------------ |
+| `pnpm start:dev`   | Start with hot reload          |
+| `pnpm build`       | Create production build        |
+| `pnpm start:prod`  | Run production server          |
+| `pnpm test`        | Run unit tests                 |
+| `pnpm test:e2e`    | Run E2E tests                  |
+| `pnpm test:cov`    | Run tests with coverage        |
+| `pnpm lint:es`     | Lint and fix with ESLint       |
+| `pnpm lint:ts`     | TypeScript type checking       |
+| `pnpm format`      | Format with Prettier           |
+| `pnpm db:migrate`  | Run database migrations        |
+| `pnpm db:generate` | Generate Prisma client         |
+| `pnpm db:studio`   | Open Prisma Studio             |
+| `pnpm db:deploy`   | Deploy migrations (production) |
 
 ---
 
@@ -110,6 +115,7 @@ pnpm test:cov
 ```
 
 **Test Coverage:**
+
 - **Unit tests**: Business logic with mocked dependencies
 - **E2E tests**: Full API flow with mocked Redis and in-memory database
 - **No Docker required**: Tests use mocks for fast CI/CD execution
@@ -172,7 +178,8 @@ Services can subscribe to events with automatic retry and error handling:
 - Dead letter queue for permanently failed messages
 - Graceful shutdown with pending message acknowledgment
 
-For detailed architecture patterns and beginner guidance, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For detailed architecture patterns and beginner guidance, see
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -195,15 +202,15 @@ docker-compose logs -f app
 
 Key configuration (see `.env.example` for full list):
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SERVICE_NAME` | Service identifier for tracing | `microservice` |
-| `PORT` | Application port | `3000` |
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `REDIS_HOST` | Redis server host | `localhost` |
-| `REDIS_PORT` | Redis server port | `6379` |
-| `LOG_LEVEL` | Logging verbosity | `info` |
-| `METRICS_ENABLED` | Enable Prometheus metrics | `true` |
+| Variable          | Description                    | Default        |
+| ----------------- | ------------------------------ | -------------- |
+| `SERVICE_NAME`    | Service identifier for tracing | `microservice` |
+| `PORT`            | Application port               | `3000`         |
+| `DATABASE_URL`    | PostgreSQL connection string   | Required       |
+| `REDIS_HOST`      | Redis server host              | `localhost`    |
+| `REDIS_PORT`      | Redis server port              | `6379`         |
+| `LOG_LEVEL`       | Logging verbosity              | `info`         |
+| `METRICS_ENABLED` | Enable Prometheus metrics      | `true`         |
 
 ---
 
@@ -211,18 +218,25 @@ Key configuration (see `.env.example` for full list):
 
 This template uses shared configs from the @teo-garcia ecosystem:
 
-- [@teo-garcia/eslint-config-shared](https://github.com/teo-garcia/eslint-config-shared) - ESLint rules
-- [@teo-garcia/prettier-config-shared](https://github.com/teo-garcia/prettier-config-shared) - Prettier formatting
-- [@teo-garcia/tsconfig-shared](https://github.com/teo-garcia/tsconfig-shared) - TypeScript configuration
-- [@teo-garcia/vitest-config-shared](https://github.com/teo-garcia/vitest-config-shared) - Vitest configuration
+- [@teo-garcia/eslint-config-shared](https://github.com/teo-garcia/eslint-config-shared) -
+  ESLint rules
+- [@teo-garcia/prettier-config-shared](https://github.com/teo-garcia/prettier-config-shared) -
+  Prettier formatting
+- [@teo-garcia/tsconfig-shared](https://github.com/teo-garcia/tsconfig-shared) -
+  TypeScript configuration
+- [@teo-garcia/vitest-config-shared](https://github.com/teo-garcia/vitest-config-shared) -
+  Vitest configuration
 
 ---
 
 ## Related Templates
 
-- [nest-template-monolith](https://github.com/teo-garcia/nest-template-monolith) - Traditional NestJS REST API
-- [react-template-next](https://github.com/teo-garcia/react-template-next) - Next.js frontend
-- [react-template-rr](https://github.com/teo-garcia/react-template-rr) - React Router SPA
+- [nest-template-monolith](https://github.com/teo-garcia/nest-template-monolith) -
+  Traditional NestJS REST API
+- [react-template-next](https://github.com/teo-garcia/react-template-next) -
+  Next.js frontend
+- [react-template-rr](https://github.com/teo-garcia/react-template-rr) - React
+  Router SPA
 
 ---
 
