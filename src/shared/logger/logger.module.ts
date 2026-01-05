@@ -1,10 +1,10 @@
-import { DynamicModule, Global, Module } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { WinstonModule } from "nest-winston";
-import { Logger } from "winston";
+import { DynamicModule, Global, Module } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { WinstonModule } from 'nest-winston'
+import { Logger } from 'winston'
 
-import { createLoggerConfig } from "./logger.config";
-import { AppLogger } from "./logger.service";
+import { createLoggerConfig } from './logger.config'
+import { AppLogger } from './logger.service'
 
 @Global()
 @Module({})
@@ -17,8 +17,8 @@ export class LoggerModule {
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
             return createLoggerConfig(
-              configService.get("config.app.env") || "development",
-            );
+              configService.get('config.app.env') || 'development'
+            )
           },
         }),
       ],
@@ -26,12 +26,12 @@ export class LoggerModule {
         {
           provide: AppLogger,
           useFactory: (logger: Logger): AppLogger => {
-            return new AppLogger(logger);
+            return new AppLogger(logger)
           },
-          inject: ["winston"],
+          inject: ['winston'],
         },
       ],
       exports: [AppLogger],
-    };
+    }
   }
 }

@@ -1,6 +1,7 @@
 # Microservice Architecture Guide
 
-This guide explains the event-driven architecture patterns used in this template. If you're new to microservices or Redis Streams, start here!
+This guide explains the event-driven architecture patterns used in this
+template. If you're new to microservices or Redis Streams, start here!
 
 ---
 
@@ -21,9 +22,11 @@ This guide explains the event-driven architecture patterns used in this template
 
 ### What are Redis Streams?
 
-Redis Streams is a data structure that acts as an append-only log, similar to Kafka but simpler and built into Redis.
+Redis Streams is a data structure that acts as an append-only log, similar to
+Kafka but simpler and built into Redis.
 
 **Key Characteristics:**
+
 - **Append-only**: Messages are added to the end and never modified
 - **Ordered**: Messages maintain the order they were added
 - **Persistent**: Messages are stored in Redis and survive crashes
@@ -32,18 +35,19 @@ Redis Streams is a data structure that acts as an append-only log, similar to Ka
 
 ### Streams vs Pub/Sub vs Queues
 
-| Feature | Redis Pub/Sub | Redis Streams | Message Queues (RabbitMQ/SQS) |
-|---------|---------------|---------------|-------------------------------|
-| **Persistence** | No (fire and forget) | Yes (stored in Redis) | Yes |
-| **History** | No | Yes (can read old messages) | No (once consumed, gone) |
-| **Multiple consumers** | Yes | Yes (via consumer groups) | Yes |
-| **Acknowledgments** | No | Yes | Yes |
-| **Complexity** | Very simple | Simple | Complex |
-| **Use case** | Real-time notifications | Event sourcing, microservices | Task queues, jobs |
+| Feature                | Redis Pub/Sub           | Redis Streams                 | Message Queues (RabbitMQ/SQS) |
+| ---------------------- | ----------------------- | ----------------------------- | ----------------------------- |
+| **Persistence**        | No (fire and forget)    | Yes (stored in Redis)         | Yes                           |
+| **History**            | No                      | Yes (can read old messages)   | No (once consumed, gone)      |
+| **Multiple consumers** | Yes                     | Yes (via consumer groups)     | Yes                           |
+| **Acknowledgments**    | No                      | Yes                           | Yes                           |
+| **Complexity**         | Very simple             | Simple                        | Complex                       |
+| **Use case**           | Real-time notifications | Event sourcing, microservices | Task queues, jobs             |
 
 ### When to Use Redis Streams
 
 ✅ **Good for:**
+
 - Microservice communication
 - Event sourcing
 - Activity feeds
@@ -51,6 +55,7 @@ Redis Streams is a data structure that acts as an append-only log, similar to Ka
 - Audit logs
 
 ❌ **Not ideal for:**
+
 - Simple request/response (use HTTP)
 - Long-running batch jobs (use queues like Bull)
 - Extremely high throughput (use Kafka)
@@ -161,6 +166,7 @@ Stream: tasks:created
 ```
 
 **Key Benefits:**
+
 - Each message in a group is processed by **only one consumer**
 - If a consumer crashes, another consumer picks up unacknowledged messages
 - Different services have different consumer groups (so they all get the events)
@@ -170,8 +176,8 @@ Stream: tasks:created
 ```typescript
 // Each service should have a unique consumer group name
 await this.messageConsumer.subscribe<TaskEvent>(
-  'tasks:created',           // Stream name
-  'my-service-name',         // Consumer group (unique per service)
+  'tasks:created', // Stream name
+  'my-service-name', // Consumer group (unique per service)
   async (event) => {
     // Process event
   }
@@ -179,6 +185,7 @@ await this.messageConsumer.subscribe<TaskEvent>(
 ```
 
 **Naming Convention:**
+
 - Use your service name as the consumer group name
 - Example: `email-service`, `analytics-service`, `notification-service`
 
@@ -203,13 +210,15 @@ Move to Dead Letter Queue (DLQ)
 ```
 
 **Retry Configuration:**
+
 - **Max retries**: 3 attempts
 - **Backoff**: Exponential (100ms, 400ms, 900ms, 1600ms...)
 - **DLQ stream**: `{original-stream}:dlq` (e.g., `tasks:created:dlq`)
 
 ### Dead Letter Queue (DLQ)
 
-Messages that fail after all retries go to a dead letter queue for manual review:
+Messages that fail after all retries go to a dead letter queue for manual
+review:
 
 ```typescript
 // Monitor DLQ manually
@@ -220,6 +229,7 @@ await messageProducer.publish('tasks:created', dlqMessages[0])
 ```
 
 **Best Practices:**
+
 - Monitor DLQ size with alerts (e.g., > 100 messages = alert)
 - Investigate and fix root cause before reprocessing
 - Consider automated DLQ cleanup after 7-30 days
@@ -262,6 +272,7 @@ This template uses **mocked Redis** for fast E2E tests:
 ```
 
 **Why mock?**
+
 - Tests run in < 1 second (no Docker needed)
 - CI/CD pipelines are fast and cheap
 - Tests focus on HTTP API behavior, not messaging
@@ -308,7 +319,8 @@ Inventory Service:
   10. Consume "order.cancel" → Release reserved inventory
 ```
 
-**Implementation Tip:** Each service maintains its own state and reacts to events.
+**Implementation Tip:** Each service maintains its own state and reacts to
+events.
 
 ### Pattern 2: CQRS (Command Query Responsibility Segregation)
 
@@ -324,6 +336,7 @@ Read Side:
 ```
 
 **When to use:**
+
 - High read/write ratio (e.g., 100 reads per 1 write)
 - Complex aggregations needed
 - Different scaling needs for reads vs writes
@@ -347,11 +360,13 @@ Rebuild state: Replay all events → Current status = "COMPLETED"
 ```
 
 **When to use:**
+
 - Need full audit trail
 - Time-travel debugging
 - Complex domain logic
 
 **When NOT to use:**
+
 - Simple CRUD apps
 - High write throughput (rebuilding state is slow)
 
@@ -368,6 +383,7 @@ Rebuild state: Replay all events → Current status = "COMPLETED"
 ```
 
 **Solution**:
+
 ```bash
 docker-compose up -d  # Start Redis
 ```
@@ -377,11 +393,13 @@ docker-compose up -d  # Start Redis
 **Problem**: Consumer not registered or wrong consumer group name
 
 **Check:**
+
 1. Is `MessageConsumerService.subscribe()` called in `onModuleInit()`?
 2. Is the stream name correct?
 3. Is the consumer group name unique per service?
 
 **Debug:**
+
 ```typescript
 // Add logging
 this.logger.log(`Subscribed to ${streamName} with group ${consumerGroup}`)
@@ -404,11 +422,13 @@ await this.redis.xtrim('tasks:created', 'MAXLEN', '~', 10000)
 **Problem**: Same event processed multiple times
 
 **Causes:**
+
 - Consumer not acknowledging messages
 - Consumer timeout too short
 - Consumer crash before ACK
 
 **Solution:**
+
 - Ensure proper error handling
 - Implement idempotency keys
 - Increase consumer timeout
@@ -505,13 +525,17 @@ async create(dto: CreateTaskDto): Promise<Task> {
 
 ### Official Documentation
 
-- [Redis Streams](https://redis.io/docs/data-types/streams/) - Official Redis Streams guide
-- [NestJS Microservices](https://docs.nestjs.com/microservices/basics) - NestJS microservice patterns
+- [Redis Streams](https://redis.io/docs/data-types/streams/) - Official Redis
+  Streams guide
+- [NestJS Microservices](https://docs.nestjs.com/microservices/basics) - NestJS
+  microservice patterns
 
 ### Architecture Patterns
 
-- [Microservices Patterns (Chris Richardson)](https://microservices.io/patterns/index.html) - Comprehensive pattern catalog
-- [Event-Driven Architecture (Martin Fowler)](https://martinfowler.com/articles/201701-event-driven.html) - EDA principles
+- [Microservices Patterns (Chris Richardson)](https://microservices.io/patterns/index.html) -
+  Comprehensive pattern catalog
+- [Event-Driven Architecture (Martin Fowler)](https://martinfowler.com/articles/201701-event-driven.html) -
+  EDA principles
 
 ### Books
 

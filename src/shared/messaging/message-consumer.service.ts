@@ -74,20 +74,28 @@ export class MessageConsumerService implements OnModuleDestroy {
   ): Promise<void> {
     const client = this.redisService.getClient()
     const consumerName =
-      typeof consumerNameOrOptions === 'string' ? consumerNameOrOptions : undefined
+      typeof consumerNameOrOptions === 'string'
+        ? consumerNameOrOptions
+        : undefined
     const options =
-      typeof consumerNameOrOptions === 'string' ? optionsArg : consumerNameOrOptions
+      typeof consumerNameOrOptions === 'string'
+        ? optionsArg
+        : consumerNameOrOptions
 
     const consumer =
-      consumerName || `${this.configService.get('config.service.name')}-${Date.now()}`
+      consumerName ||
+      `${this.configService.get('config.service.name')}-${Date.now()}`
 
     // Create consumer group if it doesn't exist
     try {
       await client.xgroup('CREATE', stream, consumerGroup, '0', 'MKSTREAM')
-      this.logger.log(`Created consumer group ${consumerGroup} for stream ${stream}`)
+      this.logger.log(
+        `Created consumer group ${consumerGroup} for stream ${stream}`
+      )
     } catch (error) {
       // Group already exists, which is fine
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       if (!errorMessage.includes('BUSYGROUP')) {
         this.logger.error(`Failed to create consumer group:`, error)
         throw error
@@ -98,7 +106,9 @@ export class MessageConsumerService implements OnModuleDestroy {
     const consumerKey = `${stream}:${consumerGroup}:${consumer}`
     this.consumers.set(consumerKey, true)
 
-    this.logger.log(`Consumer ${consumer} subscribing to ${stream} in group ${consumerGroup}`)
+    this.logger.log(
+      `Consumer ${consumer} subscribing to ${stream} in group ${consumerGroup}`
+    )
 
     // Start consuming messages
     this.consumeMessages(stream, consumerGroup, consumer, handler, options)
@@ -119,10 +129,22 @@ export class MessageConsumerService implements OnModuleDestroy {
     while (this.consumers.get(consumerKey) && !this.isShuttingDown) {
       try {
         // First, process any pending messages that weren't acknowledged
-        await this.processPendingMessages(stream, consumerGroup, consumer, handler, options)
+        await this.processPendingMessages(
+          stream,
+          consumerGroup,
+          consumer,
+          handler,
+          options
+        )
 
         // Read and process new messages
-        await this.readAndProcessNewMessages(stream, consumerGroup, consumer, handler, options)
+        await this.readAndProcessNewMessages(
+          stream,
+          consumerGroup,
+          consumer,
+          handler,
+          options
+        )
       } catch (error) {
         await this.handleConsumeError(stream, error)
       }
@@ -164,7 +186,14 @@ export class MessageConsumerService implements OnModuleDestroy {
     if (results && results.length > 0) {
       for (const [, messages] of results) {
         for (const [messageId, fields] of messages) {
-          await this.processMessage(stream, consumerGroup, messageId, fields, handler, options)
+          await this.processMessage(
+            stream,
+            consumerGroup,
+            messageId,
+            fields,
+            handler,
+            options
+          )
         }
       }
     }
@@ -173,7 +202,10 @@ export class MessageConsumerService implements OnModuleDestroy {
   /**
    * Handle errors in the consumption loop
    */
-  private async handleConsumeError(stream: string, error: unknown): Promise<void> {
+  private async handleConsumeError(
+    stream: string,
+    error: unknown
+  ): Promise<void> {
     if (!this.isShuttingDown) {
       this.logger.error(`Error in consume loop for ${stream}:`, error)
       // Wait before retrying to avoid tight loop on persistent errors
@@ -219,16 +251,26 @@ export class MessageConsumerService implements OnModuleDestroy {
 
           if (claimed && claimed.length > 0) {
             const [, fields] = claimed[0]
-            await this.processMessage(stream, consumerGroup, messageId, fields, handler, options)
+            await this.processMessage(
+              stream,
+              consumerGroup,
+              messageId,
+              fields,
+              handler,
+              options
+            )
           }
         }
       }
     } catch (error) {
       // NOGROUP error is expected on first startup when stream/group doesn't exist yet
       // The subscribe method creates the group, but there may be no pending messages
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       if (errorMessage.includes('NOGROUP')) {
-        this.logger.debug(`No pending messages for ${stream}:${consumerGroup} (group may be new)`)
+        this.logger.debug(
+          `No pending messages for ${stream}:${consumerGroup} (group may be new)`
+        )
       } else {
         this.logger.error('Error processing pending messages:', error)
       }
@@ -266,11 +308,18 @@ export class MessageConsumerService implements OnModuleDestroy {
         throw new Error('Invalid message payload')
       }
 
-      const idempotencyKey = this.getIdempotencyKey(stream, messageId, fields, options)
+      const idempotencyKey = this.getIdempotencyKey(
+        stream,
+        messageId,
+        fields,
+        options
+      )
 
       if (idempotencyKey && (await this.isDuplicate(idempotencyKey))) {
         await client.xack(stream, consumerGroup, messageId)
-        this.logger.warn(`Skipped duplicate message ${messageId} from ${stream}`)
+        this.logger.warn(
+          `Skipped duplicate message ${messageId} from ${stream}`
+        )
         return
       }
 
@@ -329,7 +378,9 @@ export class MessageConsumerService implements OnModuleDestroy {
     const keyField = options.idempotency.keyField ?? 'idempotencyKey'
     const keyIndex = fields.indexOf(keyField)
     const rawKey =
-      keyIndex !== -1 && keyIndex + 1 < fields.length ? fields[keyIndex + 1] : undefined
+      keyIndex !== -1 && keyIndex + 1 < fields.length
+        ? fields[keyIndex + 1]
+        : undefined
     const suffix = rawKey && rawKey.length > 0 ? rawKey : messageId
 
     return `idempotency:${stream}:${suffix}`
@@ -341,7 +392,10 @@ export class MessageConsumerService implements OnModuleDestroy {
     return existing != null
   }
 
-  private async markProcessed(idempotencyKey: string, ttlSeconds: number): Promise<void> {
+  private async markProcessed(
+    idempotencyKey: string,
+    ttlSeconds: number
+  ): Promise<void> {
     const client = this.redisService.getClient()
     await client.set(idempotencyKey, '1', 'EX', ttlSeconds)
   }
@@ -372,7 +426,9 @@ export class MessageConsumerService implements OnModuleDestroy {
         Date.now().toString()
       )
 
-      this.logger.error(`Moved message ${messageId} from ${stream} to dead letter queue`)
+      this.logger.error(
+        `Moved message ${messageId} from ${stream} to dead letter queue`
+      )
     } catch (dlqError) {
       this.logger.error('Failed to move message to DLQ:', dlqError)
     }
@@ -381,7 +437,11 @@ export class MessageConsumerService implements OnModuleDestroy {
   /**
    * Unsubscribe from a stream
    */
-  async unsubscribe(stream: string, consumerGroup: string, consumerName: string): Promise<void> {
+  async unsubscribe(
+    stream: string,
+    consumerGroup: string,
+    consumerName: string
+  ): Promise<void> {
     const consumerKey = `${stream}:${consumerGroup}:${consumerName}`
     this.consumers.delete(consumerKey)
     this.logger.log(`Unsubscribed ${consumerName} from ${stream}`)

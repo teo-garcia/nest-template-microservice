@@ -27,7 +27,7 @@ export class HealthController {
     private memory: MemoryHealthIndicator,
     private redis: RedisHealthIndicator,
     private prismaHealth: PrismaHealthIndicator,
-    private prisma: PrismaService,
+    private prisma: PrismaService
   ) {}
 
   /**

@@ -32,8 +32,10 @@ export class TasksService {
     private readonly messageProducer: MessageProducerService,
     private readonly configService: ConfigService
   ) {
-    this.databaseEnabled = this.configService.get<boolean>('config.database.enabled') ?? false
-    this.serviceName = this.configService.get<string>('config.service.name') ?? 'microservice'
+    this.databaseEnabled =
+      this.configService.get<boolean>('config.database.enabled') ?? false
+    this.serviceName =
+      this.configService.get<string>('config.service.name') ?? 'microservice'
   }
 
   /**
@@ -84,7 +86,9 @@ export class TasksService {
    * @returns Array of tasks matching the criteria
    */
   async findAll(status?: TaskStatus, priority?: number): Promise<Task[]> {
-    this.logger.debug(`Finding tasks with status=${status}, priority=${priority}`)
+    this.logger.debug(
+      `Finding tasks with status=${status}, priority=${priority}`
+    )
 
     // Build dynamic where clause based on provided filters
     const where: { status?: TaskStatus; priority?: { gte: number } } = {}
@@ -148,7 +152,8 @@ export class TasksService {
     })
 
     // Determine event type based on what changed
-    const statusChanged = updateTaskDto.status && updateTaskDto.status !== currentTask.status
+    const statusChanged =
+      updateTaskDto.status && updateTaskDto.status !== currentTask.status
 
     await this.publishEvent(
       new TaskEvent({
