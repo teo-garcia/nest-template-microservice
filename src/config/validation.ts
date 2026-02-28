@@ -68,6 +68,15 @@ class EnvironmentVariables {
   @IsOptional()
   METRICS_ENABLED?: boolean
 
+  // Rate Limiting
+  @IsNumber()
+  @IsOptional()
+  THROTTLE_TTL?: number
+
+  @IsNumber()
+  @IsOptional()
+  THROTTLE_LIMIT?: number
+
   // CORS
   @IsString()
   @IsOptional()

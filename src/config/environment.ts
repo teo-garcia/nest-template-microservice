@@ -47,6 +47,12 @@ export default registerAs('config', () => ({
     enabled: process.env.METRICS_ENABLED !== 'false', // Enabled by default
   },
 
+  // Rate Limiting
+  throttle: {
+    ttl: Number.parseInt(process.env.THROTTLE_TTL || '60', 10),
+    limit: Number.parseInt(process.env.THROTTLE_LIMIT || '100', 10),
+  },
+
   // CORS Configuration
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
