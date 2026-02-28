@@ -22,7 +22,7 @@ export default registerAs('config', () => ({
     apiPrefix: process.env.API_PREFIX || 'api',
     shutdownTimeout: Number.parseInt(
       process.env.SHUTDOWN_TIMEOUT || '10000',
-      10,
+      10
     ),
   },
 
