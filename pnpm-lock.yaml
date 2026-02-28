@@ -91,14 +91,14 @@ importers:
         specifier: ^1.13.5
         version: 1.15.11
       '@teo-garcia/eslint-config-shared':
-        specifier: ^0.3.1
-        version: 0.3.1(d1c6a53d0dd192761b12c980652388bf)
+        specifier: ^0.3.8
+        version: 0.3.8(d1c6a53d0dd192761b12c980652388bf)
       '@teo-garcia/prettier-config-shared':
-        specifier: ^0.2.1
-        version: 0.2.1(prettier@3.8.1)
+        specifier: ^0.2.8
+        version: 0.2.8(prettier@3.8.1)
       '@teo-garcia/tsconfig-shared':
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^0.1.9
+        version: 0.1.9
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.6
@@ -903,49 +903,42 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/nice-linux-arm64-musl@1.1.1':
     resolution: {integrity: sha512-+2Rzdb3nTIYZ0YJF43qf2twhqOCkiSrHx2Pg6DJaCPYhhaxbLcdlV8hCRMHghQ+EtZQWGNcS2xF4KxBhSGeutg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@napi-rs/nice-linux-ppc64-gnu@1.1.1':
     resolution: {integrity: sha512-4FS8oc0GeHpwvv4tKciKkw3Y4jKsL7FRhaOeiPei0X9T4Jd619wHNe4xCLmN2EMgZoeGg+Q7GY7BsvwKpL22Tg==}
     engines: {node: '>= 10'}
     cpu: [ppc64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/nice-linux-riscv64-gnu@1.1.1':
     resolution: {integrity: sha512-HU0nw9uD4FO/oGCCk409tCi5IzIZpH2agE6nN4fqpwVlCn5BOq0MS1dXGjXaG17JaAvrlpV5ZeyZwSon10XOXw==}
     engines: {node: '>= 10'}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/nice-linux-s390x-gnu@1.1.1':
     resolution: {integrity: sha512-2YqKJWWl24EwrX0DzCQgPLKQBxYDdBxOHot1KWEq7aY2uYeX+Uvtv4I8xFVVygJDgf6/92h9N3Y43WPx8+PAgQ==}
     engines: {node: '>= 10'}
     cpu: [s390x]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/nice-linux-x64-gnu@1.1.1':
     resolution: {integrity: sha512-/gaNz3R92t+dcrfCw/96pDopcmec7oCcAQ3l/M+Zxr82KT4DljD37CpgrnXV+pJC263JkW572pdbP3hP+KjcIg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/nice-linux-x64-musl@1.1.1':
     resolution: {integrity: sha512-xScCGnyj/oppsNPMnevsBe3pvNaoK7FGvMjT35riz9YdhB2WtTG47ZlbxtOLpjeO9SqqQ2J2igCmz6IJOD5JYw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@napi-rs/nice-openharmony-arm64@1.1.1':
     resolution: {integrity: sha512-6uJPRVwVCLDeoOaNyeiW0gp2kFIM4r7PL2MczdZQHkFi9gVlgm+Vn+V6nTWRcu856mJ2WjYJiumEajfSm7arPQ==}
@@ -1238,28 +1231,24 @@ packages:
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@swc/core-linux-arm64-musl@1.15.11':
     resolution: {integrity: sha512-PYftgsTaGnfDK4m6/dty9ryK1FbLk+LosDJ/RJR2nkXGc8rd+WenXIlvHjWULiBVnS1RsjHHOXmTS4nDhe0v0w==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@swc/core-linux-x64-gnu@1.15.11':
     resolution: {integrity: sha512-DKtnJKIHiZdARyTKiX7zdRjiDS1KihkQWatQiCHMv+zc2sfwb4Glrodx2VLOX4rsa92NLR0Sw8WLcPEMFY1szQ==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@swc/core-linux-x64-musl@1.15.11':
     resolution: {integrity: sha512-mUjjntHj4+8WBaiDe5UwRNHuEzLjIWBTSGTw0JT9+C9/Yyuh4KQqlcEQ3ro6GkHmBGXBFpGIj/o5VMyRWfVfWw==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@swc/core-win32-arm64-msvc@1.15.11':
     resolution: {integrity: sha512-ZkNNG5zL49YpaFzfl6fskNOSxtcZ5uOYmWBkY4wVAvgbSAQzLRVBp+xArGWh2oXlY/WgL99zQSGTv7RI5E6nzA==}
@@ -1298,8 +1287,8 @@ packages:
     resolution: {integrity: sha512-+PmQX0PiAYPMeVYe237LJAYvOMYW1j2rH5YROyS3b4CTVJum34HfRvKvAzozHAQG0TnHNdUfY9nCeUyRAs//cw==}
     engines: {node: '>=14.16'}
 
-  '@teo-garcia/eslint-config-shared@0.3.1':
-    resolution: {integrity: sha512-6ZNqyGmdydBJ1oLDoYCQbV62WK/O6j785O+MHyEiguWjE1sOh9sdXwq3TQSR9IkvhjZAxzIWU9FGUCvlVZWpRQ==}
+  '@teo-garcia/eslint-config-shared@0.3.8':
+    resolution: {integrity: sha512-JEXZOgY1n/8urfZPtd/xyIBzfMNBKMtPz38i8hGXBWP54dQzHdlup0zPKY/wzgAQ+gGAsmyZ5Rq0vzQK73u3kQ==}
     engines: {node: '>=21'}
     peerDependencies:
       '@eslint/compat': ^1.3.1
@@ -1334,14 +1323,14 @@ packages:
       eslint-plugin-testing-library:
         optional: true
 
-  '@teo-garcia/prettier-config-shared@0.2.1':
-    resolution: {integrity: sha512-3XpehkTLLKRSjjrgRq9s4TMdFUCvcLSbaKyhRUUnDHzPi5UZJ8T5Yw/HLfmI5ccpD4mO3/3GKoD3Suy/xPJpNQ==}
+  '@teo-garcia/prettier-config-shared@0.2.8':
+    resolution: {integrity: sha512-JHWMoXLIWKctAClV8lf4dT3Zbay+s9WBPU2Pd8ATQWIvRiVANlQr1dt35Fn8XOIotXIvr6Rb0V6zXa1mCA0fvg==}
     engines: {node: '>=20.11'}
     peerDependencies:
       prettier: ^3.0.0
 
-  '@teo-garcia/tsconfig-shared@0.1.2':
-    resolution: {integrity: sha512-Op01gzTkeYwZ8jtmyIP/kLlQyfB5Eh7htWxPb6Xe0ind+fVbZtaHlcYT2w+WfraJT/Yw3IjDMiapJN+VVd938A==}
+  '@teo-garcia/tsconfig-shared@0.1.9':
+    resolution: {integrity: sha512-PPCJ5VGZRh/QyPffvhgovnItMm9QDLJHSx4KOkgdxA7zwJx4++kWwHyjvMkrAfyokoixNg2SI+090/QgZZ7V1w==}
 
   '@tokenizer/inflate@0.2.7':
     resolution: {integrity: sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==}
@@ -1575,49 +1564,41 @@ packages:
     resolution: {integrity: sha512-34gw7PjDGB9JgePJEmhEqBhWvCiiWCuXsL9hYphDF7crW7UgI05gyBAi6MF58uGcMOiOqSJ2ybEeCvHcq0BCmQ==}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@unrs/resolver-binding-linux-arm64-musl@1.11.1':
     resolution: {integrity: sha512-RyMIx6Uf53hhOtJDIamSbTskA99sPHS96wxVE/bJtePJJtpdKGXO1wY90oRdXuYOGOTuqjT8ACccMc4K6QmT3w==}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@unrs/resolver-binding-linux-ppc64-gnu@1.11.1':
     resolution: {integrity: sha512-D8Vae74A4/a+mZH0FbOkFJL9DSK2R6TFPC9M+jCWYia/q2einCubX10pecpDiTmkJVUH+y8K3BZClycD8nCShA==}
     cpu: [ppc64]
     os: [linux]
-    libc: [glibc]
 
   '@unrs/resolver-binding-linux-riscv64-gnu@1.11.1':
     resolution: {integrity: sha512-frxL4OrzOWVVsOc96+V3aqTIQl1O2TjgExV4EKgRY09AJ9leZpEg8Ak9phadbuX0BA4k8U5qtvMSQQGGmaJqcQ==}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@unrs/resolver-binding-linux-riscv64-musl@1.11.1':
     resolution: {integrity: sha512-mJ5vuDaIZ+l/acv01sHoXfpnyrNKOk/3aDoEdLO/Xtn9HuZlDD6jKxHlkN8ZhWyLJsRBxfv9GYM2utQ1SChKew==}
     cpu: [riscv64]
     os: [linux]
-    libc: [musl]
 
   '@unrs/resolver-binding-linux-s390x-gnu@1.11.1':
     resolution: {integrity: sha512-kELo8ebBVtb9sA7rMe1Cph4QHreByhaZ2QEADd9NzIQsYNQpt9UkM9iqr2lhGr5afh885d/cB5QeTXSbZHTYPg==}
     cpu: [s390x]
     os: [linux]
-    libc: [glibc]
 
   '@unrs/resolver-binding-linux-x64-gnu@1.11.1':
     resolution: {integrity: sha512-C3ZAHugKgovV5YvAMsxhq0gtXuwESUKc5MhEtjBpLoHPLYM+iuwSj3lflFwK3DPm68660rZ7G8BMcwSro7hD5w==}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@unrs/resolver-binding-linux-x64-musl@1.11.1':
     resolution: {integrity: sha512-rV0YSoyhK2nZ4vEswT/QwqzqQXw5I6CjoaYMOX0TqBlWhojUf8P94mvI7nuJTeaCkkds3QE4+zS8Ko+GdXuZtA==}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@unrs/resolver-binding-wasm32-wasi@1.11.1':
     resolution: {integrity: sha512-5u4RkfxJm+Ng7IWgkzi3qrFOvLvQYnPBmjmZQ8+szTK/b31fQCnleNl1GgEt7nIsZRIf5PLhPwT0WM+q45x/UQ==}
@@ -6341,7 +6322,7 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@teo-garcia/eslint-config-shared@0.3.1(d1c6a53d0dd192761b12c980652388bf)':
+  '@teo-garcia/eslint-config-shared@0.3.8(d1c6a53d0dd192761b12c980652388bf)':
     dependencies:
       '@eslint/compat': 1.4.0(eslint@9.39.2(jiti@2.6.1))
       '@eslint/eslintrc': 3.3.3
@@ -6362,11 +6343,11 @@ snapshots:
       eslint-plugin-react-refresh: 0.4.23(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-testing-library: 7.13.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
 
-  '@teo-garcia/prettier-config-shared@0.2.1(prettier@3.8.1)':
+  '@teo-garcia/prettier-config-shared@0.2.8(prettier@3.8.1)':
     dependencies:
       prettier: 3.8.1
 
-  '@teo-garcia/tsconfig-shared@0.1.2': {}
+  '@teo-garcia/tsconfig-shared@0.1.9': {}
 
   '@tokenizer/inflate@0.2.7':
     dependencies:
