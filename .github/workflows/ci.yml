@@ -10,8 +10,6 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    # Service containers for e2e tests
-    # Note: Redis is optional (only needed when ENABLE_MESSAGING=true)
     services:
       postgres:
         image: postgres:18-alpine
@@ -42,9 +40,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Prisma Client (if schema exists)
-        run: pnpm db:generate || echo "No Prisma schema found"
-        continue-on-error: true
+      - name: Create test environment file
+        run: cp .env.test.example .env.test
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
 
       - name: Lint
         run: pnpm lint:es:check
@@ -58,13 +58,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Run migrations (if schema exists)
-        run: pnpm db:deploy || echo "No migrations to run"
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nest_microservice_test?schema=public
-          DATABASE_ENABLED: true
-        continue-on-error: true
-
       - name: Run unit tests
         run: pnpm test
         env:
@@ -73,10 +66,6 @@ jobs:
 
       - name: Run e2e tests
         run: pnpm test:e2e
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nest_microservice_test?schema=public
-          DATABASE_ENABLED: false
-          PORT: 3001
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5
