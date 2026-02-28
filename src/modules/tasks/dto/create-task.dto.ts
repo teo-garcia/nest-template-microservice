@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsEnum,
   IsInt,
@@ -11,44 +12,28 @@ import {
 
 import { TaskStatus } from '../../../generated/prisma/client'
 
-/**
- * Create Task DTO
- *
- * Validates incoming data for task creation.
- * Uses class-validator decorators for automatic validation.
- */
 export class CreateTaskDto {
-  /**
-   * Task title (required)
-   * Must be a non-empty string with max 255 characters
-   */
+  @ApiProperty({ example: 'Complete documentation', maxLength: 255 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   title: string
 
-  /**
-   * Task description (optional)
-   * Longer text describing the task details
-   */
+  @ApiPropertyOptional({
+    example: 'Write API docs for the tasks module',
+    maxLength: 2000,
+  })
   @IsString()
   @IsOptional()
   @MaxLength(2000)
   description?: string
 
-  /**
-   * Task status (optional, defaults to PENDING)
-   * Must be a valid TaskStatus enum value
-   */
+  @ApiPropertyOptional({ enum: TaskStatus, default: TaskStatus.PENDING })
   @IsEnum(TaskStatus)
   @IsOptional()
   status?: TaskStatus
 
-  /**
-   * Task priority (optional, defaults to 0)
-   * Higher numbers indicate higher priority
-   * Range: 0-10
-   */
+  @ApiPropertyOptional({ example: 5, minimum: 0, maximum: 10, default: 0 })
   @IsInt()
   @IsOptional()
   @Min(0)

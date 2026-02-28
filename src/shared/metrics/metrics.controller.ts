@@ -1,13 +1,9 @@
 import { Controller, Get, Header } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 
 import { MetricsService } from './metrics.service'
 
-/**
- * Metrics Controller
- *
- * Exposes Prometheus-compatible metrics endpoint at /metrics.
- * This endpoint is typically scraped by Prometheus or other monitoring systems.
- */
+@ApiTags('Metrics')
 @Controller('metrics')
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
