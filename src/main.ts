@@ -94,8 +94,9 @@ async function bootstrap(): Promise<void> {
     logger.log(`${signal} received, starting graceful shutdown...`)
     setTimeout(() => {
       logger.error(
-        `Shutdown timed out after ${shutdownTimeout}ms, forcing exit`,
+        `Shutdown timed out after ${shutdownTimeout}ms, forcing exit`
       )
+      // eslint-disable-next-line unicorn/no-process-exit
       process.exit(1)
     }, shutdownTimeout).unref()
   }
