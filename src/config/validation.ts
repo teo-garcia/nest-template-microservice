@@ -41,6 +41,10 @@ class EnvironmentVariables {
   @IsOptional()
   API_PREFIX?: string = 'api'
 
+  @IsNumber()
+  @IsOptional()
+  SHUTDOWN_TIMEOUT?: number
+
   // Database (required)
   @IsString()
   @IsOptional()

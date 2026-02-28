@@ -20,6 +20,10 @@ export default registerAs('config', () => ({
     env: process.env.NODE_ENV || 'development',
     port: Number.parseInt(process.env.PORT || '3000', 10),
     apiPrefix: process.env.API_PREFIX || 'api',
+    shutdownTimeout: Number.parseInt(
+      process.env.SHUTDOWN_TIMEOUT || '10000',
+      10,
+    ),
   },
 
   // Database Configuration

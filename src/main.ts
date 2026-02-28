@@ -76,6 +76,9 @@ async function bootstrap(): Promise<void> {
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig)
   SwaggerModule.setup('docs', app, swaggerDocument)
 
+  const shutdownTimeout =
+    configService.get<number>('config.app.shutdownTimeout') ?? 10_000
+
   app.enableShutdownHooks()
 
   await app.listen(port)
@@ -86,19 +89,21 @@ async function bootstrap(): Promise<void> {
   logger.log(`Metrics available at: ${baseUrl}/metrics`)
   logger.log(`Health check available at: ${baseUrl}/health`)
   logger.log(`API docs available at: ${baseUrl}/docs`)
+
+  const forceExit = (signal: string) => {
+    logger.log(`${signal} received, starting graceful shutdown...`)
+    setTimeout(() => {
+      logger.error(
+        `Shutdown timed out after ${shutdownTimeout}ms, forcing exit`,
+      )
+      process.exit(1)
+    }, shutdownTimeout).unref()
+  }
+
+  process.on('SIGTERM', () => forceExit('SIGTERM'))
+  process.on('SIGINT', () => forceExit('SIGINT'))
 }
 
-// Handle graceful shutdown signals
-// These signals are sent by orchestrators (Docker, Kubernetes) when stopping containers
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server')
-})
-
-process.on('SIGINT', () => {
-  console.log('SIGINT signal received: closing HTTP server')
-})
-
-// Handle unhandled rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason)
 })
