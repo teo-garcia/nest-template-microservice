@@ -5,6 +5,7 @@
   "author": "teo-garcia",
   "private": true,
   "license": "MIT",
+  "packageManager": "pnpm@10.2.0",
   "engines": {
     "node": ">=24",
     "pnpm": ">=9"

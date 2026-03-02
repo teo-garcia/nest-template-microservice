@@ -6,7 +6,7 @@
 checks, and metrics**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-22+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/Node-24+-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-9+-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com)
 [![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)](https://prisma.io)
@@ -224,8 +224,6 @@ This template uses shared configs from the @teo-garcia ecosystem:
   Prettier formatting
 - [@teo-garcia/tsconfig-shared](https://github.com/teo-garcia/tsconfig-shared) -
   TypeScript configuration
-- [@teo-garcia/vitest-config-shared](https://github.com/teo-garcia/vitest-config-shared) -
-  Vitest configuration
 
 ---
 
