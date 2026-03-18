@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "nest build",
+    "check": "pnpm lint:es:check && pnpm lint:ts && pnpm format:check && pnpm test",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -23,6 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest --passWithNoTests",
+    "coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
