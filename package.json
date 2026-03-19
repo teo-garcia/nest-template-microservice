@@ -5,7 +5,7 @@
   "author": "teo-garcia",
   "private": true,
   "license": "MIT",
-  "packageManager": "pnpm@10.2.0",
+  "packageManager": "pnpm@10.32.1",
   "engines": {
     "node": ">=24",
     "pnpm": ">=9"
@@ -45,8 +45,8 @@
     "@nestjs/swagger": "^11.2.6",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.5.0",
-    "@prisma/adapter-pg": "7.4.2",
-    "@prisma/client": "7.4.2",
+    "@prisma/adapter-pg": "7.5.0",
+    "@prisma/client": "7.5.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.0",
     "dotenv": "^17.2.3",
@@ -91,7 +91,7 @@
     "jest": "^30.2.0",
     "lint-staged": "^16.2.3",
     "prettier": "^3.6.2",
-    "prisma": "7.4.2",
+    "prisma": "7.5.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.4",
