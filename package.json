@@ -13,6 +13,7 @@
   "scripts": {
     "build": "nest build",
     "check": "pnpm lint:es:check && pnpm lint:ts && pnpm format:check && pnpm test",
+    "dev": "pnpm start:dev",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
