@@ -92,4 +92,4 @@ networks:
 # docker-compose up -d
 #
 # This starts both PostgreSQL and Redis (both required for the microservice).
-# The application should be run separately using: pnpm start:dev
+# The application should be run separately using: pnpm dev
