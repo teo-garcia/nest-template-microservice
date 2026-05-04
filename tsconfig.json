@@ -15,6 +15,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "types": ["jest", "node"],
+    "rootDir": ".",
     "outDir": "./dist",
     "paths": {
       "@/*": ["./src/*"]
