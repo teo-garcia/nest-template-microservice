@@ -61,20 +61,21 @@ The service starts on `http://localhost:3000`.
 
 ## Scripts
 
-| Command            | Description                    |
-| ------------------ | ------------------------------ |
-| `pnpm dev`         | Start with hot reload          |
-| `pnpm build`       | Create production build        |
-| `pnpm start:prod`  | Run production server          |
-| `pnpm test`        | Run unit tests                 |
-| `pnpm test:e2e`    | Run E2E tests                  |
-| `pnpm test:cov`    | Run tests with coverage        |
-| `pnpm lint:es`     | Lint and fix with ESLint       |
-| `pnpm lint:ts`     | TypeScript type checking       |
-| `pnpm format`      | Format with Prettier           |
-| `pnpm db:migrate`  | Run database migrations        |
-| `pnpm db:generate` | Generate Prisma client         |
-| `pnpm db:deploy`   | Deploy migrations (production) |
+| Command            | Description                            |
+| ------------------ | -------------------------------------- |
+| `pnpm dev`         | Start with hot reload                  |
+| `pnpm build`       | Create production build                |
+| `pnpm check`       | Run lint, typecheck, format, and tests |
+| `pnpm start:prod`  | Run production server                  |
+| `pnpm test`        | Run unit tests                         |
+| `pnpm test:e2e`    | Run E2E tests                          |
+| `pnpm test:cov`    | Run tests with coverage                |
+| `pnpm lint:es`     | Lint and fix with ESLint               |
+| `pnpm lint:ts`     | TypeScript type checking               |
+| `pnpm format`      | Format with Prettier                   |
+| `pnpm db:migrate`  | Run database migrations                |
+| `pnpm db:generate` | Generate Prisma client                 |
+| `pnpm db:deploy`   | Deploy migrations (production)         |
 
 ---
 
