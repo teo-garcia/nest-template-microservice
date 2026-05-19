@@ -103,6 +103,7 @@ acknowledges pending messages.
 | `GET /health/live`  | Liveness probe                                       |
 | `GET /health/ready` | Readiness probe (checks Redis + DB)                  |
 | `GET /health`       | Full health summary with memory metrics              |
+| `GET /docs`         | Swagger API documentation                            |
 | `GET /metrics`      | Prometheus metrics (request count, duration, memory) |
 
 Structured JSON logs via Winston with daily rotation and request ID tracking.
