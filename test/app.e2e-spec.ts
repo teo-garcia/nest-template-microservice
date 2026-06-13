@@ -5,9 +5,11 @@ import request from 'supertest'
 import { App } from 'supertest/types'
 
 import { AppModule } from '../src/app.module'
+import { NatsHealthIndicator } from '../src/shared/health/nats.health'
 import { RedisHealthIndicator } from '../src/shared/health/redis.health'
 import { MessageConsumerService } from '../src/shared/messaging/message-consumer.service'
 import { MessageProducerService } from '../src/shared/messaging/message-producer.service'
+import { NatsService } from '../src/shared/messaging/nats.service'
 import { RedisService } from '../src/shared/messaging/redis.service'
 import { GlobalValidationPipe } from '../src/shared/pipes'
 import { PrismaService } from '../src/shared/prisma'
@@ -20,10 +22,9 @@ import { PrismaService } from '../src/shared/prisma'
  * - Health checks
  * - Metrics
  * - Input validation
- * - Event publishing (mocked for fast tests without external dependencies)
  *
- * Note: Redis dependencies are mocked to enable tests to run without Docker.
- * For integration tests with real Redis, run `docker-compose up -d` and test manually.
+ * Note: broker and Redis dependencies are mocked to enable tests to run without Docker.
+ * Stack-level integration tests validate NATS JetStream externally.
  */
 type TaskRecord = {
   id: string
@@ -124,6 +125,21 @@ describe('AppController (e2e)', () => {
         ping: async () => false,
         onModuleDestroy: async () => {},
       })
+      .overrideProvider(NatsService)
+      .useValue({
+        getConnection: async () => null,
+        getJetStream: async () => null,
+        getJetStreamManager: async () => null,
+        ensureStream: async () => {},
+        ensureConsumer: async () => {},
+        isHealthy: async () => true,
+        getStreamName: (stream: string) => stream.replaceAll(':', '_'),
+        getSubject: (stream: string) => stream.replaceAll(':', '.'),
+        getDeadLetterSubject: (stream: string) =>
+          `${stream.replaceAll(':', '.')}.dlq`,
+        getConsumerName: (name: string) => name,
+        onModuleDestroy: async () => {},
+      })
       .overrideProvider(MessageProducerService)
       .useValue({
         publish: async () => 'mocked-message-id', // No-op for tests
@@ -137,6 +153,10 @@ describe('AppController (e2e)', () => {
       .overrideProvider(RedisHealthIndicator)
       .useValue({
         isHealthy: async () => ({ redis: { status: 'up' } }), // Mock health check as passing
+      })
+      .overrideProvider(NatsHealthIndicator)
+      .useValue({
+        isHealthy: async () => ({ nats: { status: 'up' } }),
       })
       .overrideProvider(PrismaService)
       .useValue({

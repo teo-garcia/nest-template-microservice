@@ -8,6 +8,7 @@ import {
 } from '@nestjs/terminus'
 
 import { PrismaService } from '../prisma'
+import { NatsHealthIndicator } from './nats.health'
 import { RedisHealthIndicator } from './redis.health'
 
 @ApiTags('Health')
@@ -16,6 +17,7 @@ export class HealthController {
   constructor(
     private health: HealthCheckService,
     private memory: MemoryHealthIndicator,
+    private nats: NatsHealthIndicator,
     private redis: RedisHealthIndicator,
     private prismaHealth: PrismaHealthIndicator,
     private prisma: PrismaService
@@ -49,8 +51,8 @@ export class HealthController {
   @HealthCheck()
   checkReadiness() {
     return this.health.check([
-      // Check Redis (required for messaging)
-      () => this.redis.isHealthy('redis'),
+      // Check NATS JetStream (required for async messaging)
+      () => this.nats.isHealthy('nats'),
       // Check Database (required for data persistence)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => this.prismaHealth.pingCheck('database', this.prisma as any),
@@ -82,6 +84,21 @@ export class HealthController {
               degraded: true,
               message:
                 error instanceof Error ? error.message : 'Redis check failed',
+            },
+          }
+        }
+      },
+      // NATS check (soft failure for /health)
+      async () => {
+        try {
+          return await this.nats.isHealthy('nats')
+        } catch (error) {
+          return {
+            nats: {
+              status: 'up',
+              degraded: true,
+              message:
+                error instanceof Error ? error.message : 'NATS check failed',
             },
           }
         }

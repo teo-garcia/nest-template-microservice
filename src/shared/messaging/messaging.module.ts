@@ -3,18 +3,19 @@ import { ConfigModule } from '@nestjs/config'
 
 import { MessageConsumerService } from './message-consumer.service'
 import { MessageProducerService } from './message-producer.service'
+import { NatsService } from './nats.service'
 import { RedisService } from './redis.service'
 
 /**
  * Messaging Module
  *
- * Provides Redis-based pub/sub messaging for inter-service communication.
+ * Provides NATS JetStream messaging for inter-service communication.
  * This module is global to allow any module to publish/subscribe to messages.
  *
  * Services provided:
- * - RedisService: Low-level Redis client access
- * - MessageProducerService: Publish messages to streams
- * - MessageConsumerService: Subscribe to and consume messages from streams
+ * - NatsService: Low-level NATS and JetStream access
+ * - MessageProducerService: Publish messages to JetStream subjects
+ * - MessageConsumerService: Subscribe to durable JetStream consumers
  */
 @Global()
 @Module({})
@@ -23,8 +24,18 @@ export class MessagingModule {
     return {
       module: MessagingModule,
       imports: [ConfigModule],
-      providers: [RedisService, MessageProducerService, MessageConsumerService],
-      exports: [RedisService, MessageProducerService, MessageConsumerService],
+      providers: [
+        RedisService,
+        NatsService,
+        MessageProducerService,
+        MessageConsumerService,
+      ],
+      exports: [
+        RedisService,
+        NatsService,
+        MessageProducerService,
+        MessageConsumerService,
+      ],
     }
   }
 }

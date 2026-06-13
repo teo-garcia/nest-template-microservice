@@ -11,7 +11,7 @@ services:
     ports:
       - "${DATABASE_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
       interval: 10s
@@ -21,7 +21,7 @@ services:
     networks:
       - microservice-network
 
-  # Redis (Required for messaging and caching)
+  # Redis (supporting infra for cache/rate limiting/jobs/idempotency)
   redis:
     image: redis:alpine
     container_name: nest_microservice_redis
@@ -33,6 +33,26 @@ services:
     command: redis-server --appendonly yes ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - microservice-network
+
+  # NATS JetStream (governed async broker)
+  nats:
+    image: nats:2.11-alpine
+    container_name: nest_microservice_nats
+    restart: unless-stopped
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_PORT:-8222}:8222"
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -54,6 +74,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      NATS_URL: nats://nats:4222
       PORT: 3000
     ports:
       - "${PORT:-3000}:3000"
@@ -64,6 +85,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      nats:
         condition: service_healthy
     healthcheck:
       test:
@@ -83,6 +106,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  nats_data:
 
 networks:
   microservice-network:
@@ -91,5 +115,5 @@ networks:
 # Usage:
 # docker-compose up -d
 #
-# This starts both PostgreSQL and Redis (both required for the microservice).
+# This starts PostgreSQL, Redis, and NATS JetStream.
 # The application should be run separately using: pnpm dev

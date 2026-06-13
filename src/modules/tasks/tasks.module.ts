@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { TasksController } from './controllers'
-import { TaskConsumerService, TasksService } from './services'
+import { TasksService } from './services'
 
 /**
  * Tasks Module
@@ -11,16 +11,14 @@ import { TaskConsumerService, TasksService } from './services'
  *
  * Components:
  * - TasksController: HTTP request handling
- * - TasksService: Business logic, database ops, event publishing
- * - TaskConsumerService: Event consumption from Redis Streams
+ * - TasksService: Business logic and database operations
  *
  * Dependencies:
  * - PrismaModule: Database access (imported globally)
- * - MessagingModule: Redis Streams pub/sub (imported globally)
  */
 @Module({
   controllers: [TasksController],
-  providers: [TasksService, TaskConsumerService],
+  providers: [TasksService],
   exports: [TasksService],
 })
 export class TasksModule {}

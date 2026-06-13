@@ -32,8 +32,30 @@ export default registerAs('config', () => ({
     url: process.env.DATABASE_URL,
   },
 
+  // NATS JetStream Configuration
+  // Governed broker for inter-service events.
+  nats: {
+    url: process.env.NATS_URL || 'nats://localhost:4222',
+    clientName: process.env.NATS_CLIENT_NAME || 'nest-template-microservice',
+    subjectPrefix: process.env.NATS_SUBJECT_PREFIX || 'templates',
+    streamPrefix: process.env.NATS_STREAM_PREFIX || 'template',
+    timeout: Number.parseInt(process.env.NATS_TIMEOUT || '5000', 10),
+    ackWait:
+      Number.parseInt(process.env.NATS_ACK_WAIT_SECONDS || '30', 10) *
+      1_000_000_000,
+    maxMessages: Number.parseInt(process.env.NATS_MAX_MESSAGES || '10000', 10),
+    maxReconnectAttempts: Number.parseInt(
+      process.env.NATS_MAX_RECONNECT_ATTEMPTS || '10',
+      10
+    ),
+    reconnectTimeWait: Number.parseInt(
+      process.env.NATS_RECONNECT_TIME_WAIT || '2000',
+      10
+    ),
+  },
+
   // Redis Configuration
-  // Used for pub/sub messaging, caching, and distributed locks
+  // Available for cache, rate limiting, jobs, and idempotency state.
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -69,8 +91,8 @@ export default registerAs('config', () => ({
     enableConsole: process.env.ENABLE_CONSOLE_LOGS !== 'false',
   },
 
-  // Service Discovery (for inter-service communication)
-  // These would be used to call other microservices
+  // Service Discovery (for synchronous inter-service communication)
+  // These would be used to call other microservices.
   services: {
     // Example: other service URLs
     // userService: process.env.USER_SERVICE_URL || 'http://localhost:3001',

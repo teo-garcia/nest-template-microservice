@@ -4,6 +4,7 @@ import { TerminusModule } from '@nestjs/terminus'
 import { MessagingModule } from '../messaging'
 import { PrismaModule } from '../prisma'
 import { HealthController } from './health.controller'
+import { NatsHealthIndicator } from './nats.health'
 import { RedisHealthIndicator } from './redis.health'
 
 /**
@@ -13,12 +14,8 @@ import { RedisHealthIndicator } from './redis.health'
  * Integrates with @nestjs/terminus for standardized health checks.
  */
 @Module({
-  imports: [
-    TerminusModule,
-    PrismaModule,
-    MessagingModule.forRoot(), // For Redis health checks (conditional)
-  ],
+  imports: [TerminusModule, PrismaModule, MessagingModule.forRoot()],
   controllers: [HealthController],
-  providers: [RedisHealthIndicator],
+  providers: [NatsHealthIndicator, RedisHealthIndicator],
 })
 export class HealthModule {}

@@ -2,7 +2,7 @@
 
 # NestJS Template Microservice
 
-**Event-driven NestJS microservice with Redis Streams, Prisma, and production
+**Event-driven NestJS microservice with NATS JetStream, Prisma, and production
 observability**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -23,7 +23,7 @@ ecosystem
 | Category          | Technologies                                          |
 | ----------------- | ----------------------------------------------------- |
 | **Framework**     | NestJS 11 with event-driven architecture              |
-| **Messaging**     | Redis Streams with consumer groups and retry          |
+| **Messaging**     | NATS JetStream boundary with governed stack smoke     |
 | **Database**      | Prisma ORM with PostgreSQL                            |
 | **Observability** | Health checks, Prometheus metrics, structured logging |
 | **Type Safety**   | TypeScript with strict mode                           |
@@ -40,6 +40,7 @@ ecosystem
 - Docker and Docker Compose
 - PostgreSQL
 - Redis
+- NATS JetStream
 
 ---
 
@@ -49,7 +50,7 @@ ecosystem
 pnpm install
 cp .env.example .env
 cp .env.test.example .env.test
-docker compose up -d db redis
+docker compose up -d db redis nats
 pnpm db:generate
 pnpm db:migrate
 pnpm dev
@@ -79,20 +80,13 @@ The service starts on `http://localhost:3000`.
 
 ---
 
-## Event-Driven Architecture
+## Messaging Boundary
 
-Events are published and consumed via Redis Streams:
-
-| Event                  | Trigger              |
-| ---------------------- | -------------------- |
-| `tasks:created`        | New task created     |
-| `tasks:updated`        | Task fields modified |
-| `tasks:status_changed` | Task status changed  |
-| `tasks:deleted`        | Task deleted         |
-
-Consumer groups provide load balancing across instances. Failed messages retry
-up to 3 times before moving to a dead letter queue. Graceful shutdown
-acknowledges pending messages.
+The template provides a NATS JetStream messaging boundary through
+`src/shared/messaging`. App-specific publisher/consumer flows are intentionally
+not stated in this template until their service contracts are approved. The
+portfolio-level broker behavior is verified by
+`microservices-template-stack/smoke/nats-jetstream-smoke.mjs`.
 
 ---
 
@@ -101,7 +95,7 @@ acknowledges pending messages.
 | Endpoint            | Description                                          |
 | ------------------- | ---------------------------------------------------- |
 | `GET /health/live`  | Liveness probe                                       |
-| `GET /health/ready` | Readiness probe (checks Redis + DB)                  |
+| `GET /health/ready` | Readiness probe (checks NATS + DB)                   |
 | `GET /health`       | Full health summary with memory metrics              |
 | `GET /docs`         | Swagger API documentation                            |
 | `GET /metrics`      | Prometheus metrics (request count, duration, memory) |
@@ -110,16 +104,26 @@ Structured JSON logs via Winston with daily rotation and request ID tracking.
 
 ---
 
+## Production Boundaries
+
+This template is production-oriented, but it is not a complete production
+platform by itself. Before deploying a real service, define the auth boundary,
+secrets source, ingress/API gateway, event catalog, tracing backend, deployment
+topology, and release process for the target environment.
+
+---
+
 ## Environment Variables
 
-| Variable       | Description                    | Default        |
-| -------------- | ------------------------------ | -------------- |
-| `SERVICE_NAME` | Service identifier for tracing | `microservice` |
-| `PORT`         | Application port               | `3000`         |
-| `DATABASE_URL` | PostgreSQL connection string   | Required       |
-| `REDIS_HOST`   | Redis server host              | `localhost`    |
-| `REDIS_PORT`   | Redis server port              | `6379`         |
-| `LOG_LEVEL`    | Logging verbosity              | `info`         |
+| Variable       | Description                    | Default                 |
+| -------------- | ------------------------------ | ----------------------- |
+| `SERVICE_NAME` | Service identifier for tracing | `microservice`          |
+| `PORT`         | Application port               | `3000`                  |
+| `DATABASE_URL` | PostgreSQL connection string   | Required                |
+| `NATS_URL`     | NATS server URL                | `nats://localhost:4222` |
+| `REDIS_HOST`   | Redis server host              | `localhost`             |
+| `REDIS_PORT`   | Redis server port              | `6379`                  |
+| `LOG_LEVEL`    | Logging verbosity              | `info`                  |
 
 See `.env.example` for the full list.
 
@@ -127,15 +131,15 @@ See `.env.example` for the full list.
 
 ## Project Structure
 
-| Path                  | Purpose                                                      |
-| --------------------- | ------------------------------------------------------------ |
-| `src/modules/tasks/`  | Sample task handlers, streams integration, and service logic |
-| `src/shared/health/`  | Health checks and readiness probes                           |
-| `src/shared/metrics/` | Prometheus instrumentation                                   |
-| `src/config/`         | Environment, logger, and application config                  |
-| `prisma/`             | Prisma schema and migrations                                 |
-| `test/`               | E2E coverage                                                 |
-| `docker/`             | Development and production container files                   |
+| Path                  | Purpose                                     |
+| --------------------- | ------------------------------------------- |
+| `src/modules/tasks/`  | Sample HTTP task handlers and service logic |
+| `src/shared/health/`  | Health checks and readiness probes          |
+| `src/shared/metrics/` | Prometheus instrumentation                  |
+| `src/config/`         | Environment, logger, and application config |
+| `prisma/`             | Prisma schema and migrations                |
+| `test/`               | E2E coverage                                |
+| `docker/`             | Development and production container files  |
 
 ---
 
@@ -163,12 +167,11 @@ See `.env.example` for the full list.
 
 ## Related Templates
 
-| Template                        | Description               |
-| ------------------------------- | ------------------------- |
-| `nest-template-monolith`        | NestJS single-service API |
-| `react-template-next`           | Next.js frontend          |
-| `react-template-rr`             | React Router SPA          |
-| `fastapi-template-microservice` | FastAPI equivalent        |
+| Template                 | Description               |
+| ------------------------ | ------------------------- |
+| `nest-template-monolith` | NestJS single-service API |
+| `react-template-next`    | Next.js frontend          |
+| `react-template-rr`      | React Router SPA          |
 
 ---
 

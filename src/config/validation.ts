@@ -50,7 +50,44 @@ class EnvironmentVariables {
   @IsOptional()
   DATABASE_URL?: string
 
-  // Redis (required for messaging)
+  // NATS (required for governed async messaging)
+  @IsString()
+  @IsOptional()
+  NATS_URL?: string = 'nats://localhost:4222'
+
+  @IsString()
+  @IsOptional()
+  NATS_CLIENT_NAME?: string
+
+  @IsString()
+  @IsOptional()
+  NATS_SUBJECT_PREFIX?: string
+
+  @IsString()
+  @IsOptional()
+  NATS_STREAM_PREFIX?: string
+
+  @IsNumber()
+  @IsOptional()
+  NATS_TIMEOUT?: number
+
+  @IsNumber()
+  @IsOptional()
+  NATS_ACK_WAIT_SECONDS?: number
+
+  @IsNumber()
+  @IsOptional()
+  NATS_MAX_MESSAGES?: number
+
+  @IsNumber()
+  @IsOptional()
+  NATS_MAX_RECONNECT_ATTEMPTS?: number
+
+  @IsNumber()
+  @IsOptional()
+  NATS_RECONNECT_TIME_WAIT?: number
+
+  // Redis (cache/rate limiting/jobs/idempotency)
   @IsString()
   @IsOptional()
   REDIS_HOST?: string = 'localhost'
@@ -113,6 +150,27 @@ export function validate(config: Record<string, unknown>) {
 
   if (errors.length > 0) {
     throw new Error(errors.toString())
+  }
+
+  if (
+    validatedConfig.NODE_ENV === Environment.Production ||
+    validatedConfig.NODE_ENV === Environment.Staging
+  ) {
+    const missingRequired = ['DATABASE_URL', 'NATS_URL'].filter(
+      (key) => typeof config[key] !== 'string' || config[key] === ''
+    )
+
+    if (missingRequired.length > 0) {
+      throw new Error(
+        `Missing required production environment variables: ${missingRequired.join(', ')}`
+      )
+    }
+
+    if (!validatedConfig.CORS_ORIGIN || validatedConfig.CORS_ORIGIN === '*') {
+      throw new Error(
+        'CORS_ORIGIN must be explicit in production-like environments'
+      )
+    }
   }
 
   return validatedConfig

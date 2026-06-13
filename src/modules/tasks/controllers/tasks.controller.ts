@@ -8,10 +8,23 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger'
 
 import { TaskStatus } from '../../../generated/prisma/client'
-import { CreateTaskDto, UpdateTaskDto } from '../dto'
+import { ErrorResponseDto } from '../../../shared/dto'
+import {
+  CreateTaskDto,
+  TaskApiResponseDto,
+  TaskListApiResponseDto,
+  UpdateTaskDto,
+} from '../dto'
 import { TasksService } from '../services'
 
 @ApiTags('Tasks')
@@ -32,9 +45,9 @@ export class TasksController {
    *   "description": "Write API docs for the tasks module",
    *   "priority": 5
    * }
-   *
-   * Publishes: tasks:created event
    */
+  @ApiCreatedResponse({ type: TaskApiResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
   @Post()
   async create(@Body() createTaskDto: CreateTaskDto) {
     return this.tasksService.create(createTaskDto)
@@ -53,6 +66,9 @@ export class TasksController {
    * GET /api/tasks?priority=5
    * GET /api/tasks?status=IN_PROGRESS&priority=3
    */
+  @ApiOkResponse({ type: TaskListApiResponseDto })
+  @ApiQuery({ name: 'status', required: false, enum: TaskStatus })
+  @ApiQuery({ name: 'priority', required: false, type: Number })
   @Get()
   async findAll(
     @Query('status') status?: TaskStatus,
@@ -73,6 +89,8 @@ export class TasksController {
    * Example:
    * GET /api/tasks/clx1234567890
    */
+  @ApiOkResponse({ type: TaskApiResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.tasksService.findOne(id)
@@ -91,9 +109,10 @@ export class TasksController {
    * {
    *   "status": "COMPLETED"
    * }
-   *
-   * Publishes: tasks:updated or tasks:status_changed event
    */
+  @ApiOkResponse({ type: TaskApiResponseDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
     return this.tasksService.update(id, updateTaskDto)
@@ -108,9 +127,9 @@ export class TasksController {
    *
    * Example:
    * DELETE /api/tasks/clx1234567890
-   *
-   * Publishes: tasks:deleted event
    */
+  @ApiOkResponse({ type: TaskApiResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.tasksService.remove(id)

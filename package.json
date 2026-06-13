@@ -1,7 +1,7 @@
 {
   "name": "nest-template-microservice",
   "version": "0.0.0",
-  "description": "NestJS microservice template with Redis messaging, health checks, and metrics",
+  "description": "NestJS microservice template with NATS JetStream messaging, health checks, and metrics",
   "author": "teo-garcia",
   "private": true,
   "license": "MIT",
@@ -38,6 +38,8 @@
     "commitlint": "commitlint --edit"
   },
   "dependencies": {
+    "@nats-io/jetstream": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
     "@nestjs/common": "^11.1.6",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.6",
@@ -63,6 +65,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/compat": "^2.0.3",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^10.0.0",
     "@nestjs/cli": "^11.0.10",
@@ -97,8 +100,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^6.0.0",
-    "typescript-eslint": "^8.46.0",
-    "@eslint/compat": "^2.0.3"
+    "typescript-eslint": "^8.46.0"
   },
   "jest": {
     "moduleFileExtensions": [

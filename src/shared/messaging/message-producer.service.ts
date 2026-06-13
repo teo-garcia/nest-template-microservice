@@ -1,16 +1,13 @@
+import { randomUUID } from 'node:crypto'
+
 import { Injectable, Logger } from '@nestjs/common'
 
-import { RedisService } from './redis.service'
+import { NatsService } from './nats.service'
 
 /**
  * Message Producer Service
  *
- * Publishes messages to Redis Streams for inter-service communication.
- * Redis Streams provide:
- * - Guaranteed message ordering
- * - Persistent message history
- * - Consumer groups for load balancing
- * - At-least-once delivery semantics
+ * Publishes messages to NATS JetStream for inter-service communication.
  *
  * Usage:
  * ```typescript
@@ -24,8 +21,9 @@ import { RedisService } from './redis.service'
 @Injectable()
 export class MessageProducerService {
   private readonly logger = new Logger(MessageProducerService.name)
+  private readonly encoder = new TextEncoder()
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(private readonly natsService: NatsService) {}
 
   private resolvePublishOptions(
     maxLengthOrOptions?: number | PublishOptions
@@ -37,39 +35,22 @@ export class MessageProducerService {
     return maxLengthOrOptions ?? {}
   }
 
-  private buildMessageFields<T>(data: T, options: PublishOptions): string[] {
-    const fields: string[] = [
-      'data',
-      JSON.stringify(data),
-      'timestamp',
-      Date.now().toString(),
-    ]
-
-    if (options.idempotencyKey) {
-      fields.push('idempotencyKey', options.idempotencyKey)
+  private buildEnvelope<T>(stream: string, data: T, options: PublishOptions) {
+    return {
+      id: options.idempotencyKey ?? randomUUID(),
+      type: options.eventType ?? stream.replaceAll(':', '.'),
+      source: options.source ?? 'nest-template-microservice',
+      time: new Date().toISOString(),
+      dataVersion: String(options.schemaVersion ?? 1),
+      data,
     }
-
-    if (options.schemaVersion != undefined) {
-      fields.push('schemaVersion', String(options.schemaVersion))
-    }
-
-    if (options.eventType) {
-      fields.push('eventType', options.eventType)
-    }
-
-    if (options.source) {
-      fields.push('source', options.source)
-    }
-
-    return fields
   }
 
   /**
-   * Publish a message to a Redis Stream
+   * Publish a message to NATS JetStream.
    *
-   * @param stream - Stream name (e.g., 'orders:created', 'users:updated')
+   * @param stream - Logical stream name (e.g., 'orders:created', 'users:updated')
    * @param data - Message payload (will be JSON serialized)
-   * @param maxLength - Maximum stream length (for memory management, defaults to 10000)
    * @returns Message ID
    */
   async publish<T = unknown>(
@@ -78,24 +59,21 @@ export class MessageProducerService {
     maxLengthOrOptions?: number | PublishOptions
   ): Promise<string> {
     try {
-      const client = this.redisService.getClient()
       const options = this.resolvePublishOptions(maxLengthOrOptions)
-      const maxLength = options.maxLength ?? 10_000
-      const fields = this.buildMessageFields(data, options)
+      const subject = this.natsService.getSubject(stream)
+      const streamName = this.natsService.getStreamName(stream)
+      await this.natsService.ensureStream(streamName, subject)
 
-      // XADD command adds a message to the stream
-      // MAXLEN ~ keeps stream size manageable (approximate trimming for performance)
-      // * auto-generates message ID based on timestamp
-      const messageId = await client.xadd(
-        stream,
-        'MAXLEN',
-        '~',
-        maxLength,
-        '*',
-        ...fields
+      const envelope = this.buildEnvelope(stream, data, options)
+      const jetStream = await this.natsService.getJetStream()
+      const ack = await jetStream.publish(
+        subject,
+        this.encoder.encode(JSON.stringify(envelope)),
+        { msgID: envelope.id }
       )
 
-      this.logger.debug(`Published message to ${stream}: ${messageId}`)
+      const messageId = `${ack.stream}:${ack.seq}`
+      this.logger.debug(`Published message to ${subject}: ${messageId}`)
       return messageId
     } catch (error) {
       this.logger.error(`Failed to publish message to ${stream}:`, error)
@@ -116,36 +94,18 @@ export class MessageProducerService {
     options: PublishBatchOptions<T> = {}
   ): Promise<string[]> {
     try {
-      const client = this.redisService.getClient()
-      const pipeline = client.pipeline()
-      const maxLength = options.maxLength ?? 10_000
+      const messageIds: string[] = []
 
-      // Add all messages to the pipeline
       for (const data of messages) {
-        const messageFields = this.buildMessageFields(data, {
-          idempotencyKey: options.idempotencyKey?.(data),
-          schemaVersion: options.schemaVersion,
-          eventType: options.eventType,
-          source: options.source,
-        })
-
-        pipeline.xadd(stream, 'MAXLEN', '~', maxLength, '*', ...messageFields)
+        messageIds.push(
+          await this.publish(stream, data, {
+            idempotencyKey: options.idempotencyKey?.(data),
+            schemaVersion: options.schemaVersion,
+            eventType: options.eventType,
+            source: options.source,
+          })
+        )
       }
-
-      // Execute all commands at once
-      const results = await pipeline.exec()
-
-      if (!results) {
-        throw new Error('Pipeline execution failed')
-      }
-
-      // Extract message IDs from results
-      const messageIds = results.map((result) => {
-        if (result[0]) {
-          throw result[0] // Throw error if any command failed
-        }
-        return result[1] as string
-      })
 
       this.logger.debug(
         `Published ${messages.length} messages to ${stream} in batch`
