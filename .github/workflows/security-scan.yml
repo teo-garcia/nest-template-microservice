@@ -3,7 +3,7 @@ name: Security Scan
 on:
   schedule:
     # Run first Monday of each month at 9:00 AM UTC
-    - cron: "0 9 1-7 * 1"
+    - cron: "0 9 * * 1"
   pull_request:
     branches: [main]
     paths:
