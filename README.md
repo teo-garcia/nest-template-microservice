@@ -167,11 +167,11 @@ See `.env.example` for the full list.
 
 ## Related Templates
 
-| Template                 | Description               |
-| ------------------------ | ------------------------- |
-| `nest-template-monolith` | NestJS single-service API |
-| `react-template-next`    | Next.js frontend          |
-| `react-template-rr`      | React Router SPA          |
+| Template                          | Description                 |
+| --------------------------------- | --------------------------- |
+| `nest-template-monolith`          | NestJS single-service API   |
+| `next-template-fullstack`         | Next.js full-stack app      |
+| `react-router-template-fullstack` | React Router full-stack app |
 
 ---
 
