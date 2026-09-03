@@ -9,7 +9,7 @@ import {
   Min,
 } from 'class-validator'
 
-import { TaskStatus } from '../../../generated/prisma/client'
+import { TaskStatus } from '../../../generated/prisma/client.js'
 
 export class UpdateTaskDto {
   @ApiPropertyOptional({ example: 'Updated title', maxLength: 255 })

@@ -1,1 +1,1 @@
-module.exports = require('@teo-garcia/prettier-config-shared').default
+export { default } from '@teo-garcia/prettier-config-shared'

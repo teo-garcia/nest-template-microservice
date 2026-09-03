@@ -1,7 +1,6 @@
 import base from '@teo-garcia/eslint-config-shared/base'
 import node from '@teo-garcia/eslint-config-shared/node'
 import { defineConfig } from 'eslint/config'
-import jest from 'eslint-plugin-jest'
 import globals from 'globals'
 
 export default defineConfig([
@@ -17,17 +16,11 @@ export default defineConfig([
       '**/test/**/*',
       '**/tests/**/*',
     ],
-    plugins: {
-      jest,
-    },
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
+        ...globals.vitest,
       },
-    },
-    rules: {
-      ...jest.configs.recommended.rules,
     },
   },
 ])

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import { Injectable, Logger } from '@nestjs/common'
 
-import { NatsService } from './nats.service'
+import { NatsService } from './nats.service.js'
 
 /**
  * Message Producer Service

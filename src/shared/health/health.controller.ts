@@ -7,9 +7,9 @@ import {
   PrismaHealthIndicator,
 } from '@nestjs/terminus'
 
-import { PrismaService } from '../prisma'
-import { NatsHealthIndicator } from './nats.health'
-import { RedisHealthIndicator } from './redis.health'
+import { PrismaService } from '../prisma/index.js'
+import { NatsHealthIndicator } from './nats.health.js'
+import { RedisHealthIndicator } from './redis.health.js'
 
 @ApiTags('Health')
 @Controller('health')

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
-import { TaskStatus } from '../../../generated/prisma/client'
-import { ApiResponseMetaDto } from '../../../shared/dto'
+import { TaskStatus } from '../../../generated/prisma/client.js'
+import { ApiResponseMetaDto } from '../../../shared/dto/index.js'
 
 export class TaskResponseDto {
   @ApiProperty({ example: 'clx1234567890' })

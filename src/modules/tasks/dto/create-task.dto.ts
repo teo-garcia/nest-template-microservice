@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator'
 
-import { TaskStatus } from '../../../generated/prisma/client'
+import { TaskStatus } from '../../../generated/prisma/client.js'
 
 export class CreateTaskDto {
   @ApiProperty({ example: 'Complete documentation', maxLength: 255 })

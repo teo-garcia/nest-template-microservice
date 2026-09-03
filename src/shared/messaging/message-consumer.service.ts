@@ -4,8 +4,8 @@ import { JsMsg } from '@nats-io/jetstream'
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
-import { NatsService } from './nats.service'
-import { RedisService } from './redis.service'
+import { NatsService } from './nats.service.js'
+import { RedisService } from './redis.service.js'
 
 /**
  * Message Handler Interface

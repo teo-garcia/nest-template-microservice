@@ -3,14 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 
-import { AppController } from './app.controller'
-import { environmentConfig, validate } from './config'
-import { TasksModule } from './modules/tasks'
-import { HealthModule } from './shared/health'
-import { LoggerModule } from './shared/logger/logger.module'
-import { MessagingModule } from './shared/messaging'
-import { MetricsModule } from './shared/metrics'
-import { PrismaModule } from './shared/prisma'
+import { AppController } from './app.controller.js'
+import { environmentConfig, validate } from './config/index.js'
+import { TasksModule } from './modules/tasks/index.js'
+import { HealthModule } from './shared/health/index.js'
+import { LoggerModule } from './shared/logger/logger.module.js'
+import { MessagingModule } from './shared/messaging/index.js'
+import { MetricsModule } from './shared/metrics/index.js'
+import { PrismaModule } from './shared/prisma/index.js'
 
 @Module({
   imports: [
@@ -21,6 +21,7 @@ import { PrismaModule } from './shared/prisma'
     }),
 
     ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         throttlers: [

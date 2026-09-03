@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
 import { TerminusModule } from '@nestjs/terminus'
 
-import { MessagingModule } from '../messaging'
-import { PrismaModule } from '../prisma'
-import { HealthController } from './health.controller'
-import { NatsHealthIndicator } from './nats.health'
-import { RedisHealthIndicator } from './redis.health'
+import { MessagingModule } from '../messaging/index.js'
+import { PrismaModule } from '../prisma/index.js'
+import { HealthController } from './health.controller.js'
+import { NatsHealthIndicator } from './nats.health.js'
+import { RedisHealthIndicator } from './redis.health.js'
 
 /**
  * Health Module

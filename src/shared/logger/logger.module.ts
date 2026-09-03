@@ -1,10 +1,10 @@
 import { DynamicModule, Global, Module } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { WinstonModule } from 'nest-winston'
 import { Logger } from 'winston'
 
-import { createLoggerConfig } from './logger.config'
-import { AppLogger } from './logger.service'
+import { createLoggerConfig } from './logger.config.js'
+import { AppLogger } from './logger.service.js'
 
 @Global()
 @Module({})
@@ -14,6 +14,7 @@ export class LoggerModule {
       module: LoggerModule,
       imports: [
         WinstonModule.forRootAsync({
+          imports: [ConfigModule],
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
             return createLoggerConfig(
