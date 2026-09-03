@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { HealthIndicatorResult } from '@nestjs/terminus'
 
-import { NatsService } from '../messaging'
+import { NatsService } from '../messaging/index.js'
 
 @Injectable()
 export class NatsHealthIndicator {

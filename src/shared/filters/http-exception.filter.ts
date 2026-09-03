@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common'
 
-import { Prisma } from '../../generated/prisma/client'
+import { Prisma } from '../../generated/prisma/client.js'
 
 type PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError
 import { Request, Response } from 'express'

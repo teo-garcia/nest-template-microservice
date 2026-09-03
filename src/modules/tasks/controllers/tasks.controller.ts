@@ -17,15 +17,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger'
 
-import { TaskStatus } from '../../../generated/prisma/client'
-import { ErrorResponseDto } from '../../../shared/dto'
+import { TaskStatus } from '../../../generated/prisma/client.js'
+import { ErrorResponseDto } from '../../../shared/dto/index.js'
 import {
   CreateTaskDto,
   TaskApiResponseDto,
   TaskListApiResponseDto,
   UpdateTaskDto,
-} from '../dto'
-import { TasksService } from '../services'
+} from '../dto/index.js'
+import { TasksService } from '../services/index.js'
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -71,12 +71,19 @@ export class TasksController {
   @ApiQuery({ name: 'priority', required: false, type: Number })
   @Get()
   async findAll(
-    @Query('status') status?: TaskStatus,
+    // NOTE: keep query params typed as primitives. SWC (used by Vitest)
+    // emits the TaskStatus const object as design:paramtypes metadata for a
+    // `TaskStatus` annotation, which bypasses GlobalValidationPipe's
+    // primitive skip-list and crashes class-validator on undefined.
+    @Query('status') status?: string,
     @Query('priority') priority?: string
   ) {
     // Parse priority to number if provided
     const priorityNum = priority ? Number.parseInt(priority, 10) : undefined
-    return this.tasksService.findAll(status, priorityNum)
+    return this.tasksService.findAll(
+      status as TaskStatus | undefined,
+      priorityNum
+    )
   }
 
   /**

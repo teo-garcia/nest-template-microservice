@@ -2,17 +2,16 @@ import { INestApplication } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
 import request from 'supertest'
-import { App } from 'supertest/types'
 
-import { AppModule } from '../src/app.module'
-import { NatsHealthIndicator } from '../src/shared/health/nats.health'
-import { RedisHealthIndicator } from '../src/shared/health/redis.health'
-import { MessageConsumerService } from '../src/shared/messaging/message-consumer.service'
-import { MessageProducerService } from '../src/shared/messaging/message-producer.service'
-import { NatsService } from '../src/shared/messaging/nats.service'
-import { RedisService } from '../src/shared/messaging/redis.service'
-import { GlobalValidationPipe } from '../src/shared/pipes'
-import { PrismaService } from '../src/shared/prisma'
+import { AppModule } from '../src/app.module.js'
+import { NatsHealthIndicator } from '../src/shared/health/nats.health.js'
+import { RedisHealthIndicator } from '../src/shared/health/redis.health.js'
+import { MessageConsumerService } from '../src/shared/messaging/message-consumer.service.js'
+import { MessageProducerService } from '../src/shared/messaging/message-producer.service.js'
+import { NatsService } from '../src/shared/messaging/nats.service.js'
+import { RedisService } from '../src/shared/messaging/redis.service.js'
+import { GlobalValidationPipe } from '../src/shared/pipes/index.js'
+import { PrismaService } from '../src/shared/prisma/index.js'
 
 /**
  * E2E Tests
@@ -111,7 +110,7 @@ const createTaskStore = () => {
 }
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>
+  let app: INestApplication
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

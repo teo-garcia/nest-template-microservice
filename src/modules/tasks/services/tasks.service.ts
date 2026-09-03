@@ -1,8 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 
-import { Task, TaskStatus } from '../../../generated/prisma/client'
-import { PrismaService } from '../../../shared/prisma'
-import { CreateTaskDto, UpdateTaskDto } from '../dto'
+import { Task, TaskStatus } from '../../../generated/prisma/client.js'
+import { PrismaService } from '../../../shared/prisma/index.js'
+import { CreateTaskDto, UpdateTaskDto } from '../dto/index.js'
 
 /**
  * Tasks Service

@@ -1,7 +1,8 @@
 import { ConfigService } from '@nestjs/config'
 import { Test, TestingModule } from '@nestjs/testing'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AppController } from './app.controller'
+import { AppController } from './app.controller.js'
 
 describe('AppController', () => {
   let appController: AppController
@@ -14,7 +15,7 @@ describe('AppController', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn((key: string) => {
+            get: vi.fn((key: string) => {
               const config: Record<string, unknown> = {
                 'config.service.name': 'test-microservice',
                 'config.service.version': '1.0.0',

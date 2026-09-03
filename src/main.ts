@@ -3,15 +3,15 @@ import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from 'helmet'
 
-import { AppModule } from './app.module'
-import { GlobalExceptionFilter } from './shared/filters'
+import { AppModule } from './app.module.js'
+import { GlobalExceptionFilter } from './shared/filters/index.js'
 import {
   RequestIdInterceptor,
   TransformInterceptor,
-} from './shared/interceptors'
-import { AppLogger } from './shared/logger/logger.service'
-import { MetricsInterceptor } from './shared/metrics'
-import { GlobalValidationPipe } from './shared/pipes'
+} from './shared/interceptors/index.js'
+import { AppLogger } from './shared/logger/logger.service.js'
+import { MetricsInterceptor } from './shared/metrics/index.js'
+import { GlobalValidationPipe } from './shared/pipes/index.js'
 
 /**
  * Bootstrap the microservice application

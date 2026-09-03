@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
-import { MetricsService } from './metrics.service'
+import { MetricsService } from './metrics.service.js'
 
 /**
  * Metrics Interceptor

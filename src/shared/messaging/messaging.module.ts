@@ -1,10 +1,10 @@
 import { DynamicModule, Global, Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
-import { MessageConsumerService } from './message-consumer.service'
-import { MessageProducerService } from './message-producer.service'
-import { NatsService } from './nats.service'
-import { RedisService } from './redis.service'
+import { MessageConsumerService } from './message-consumer.service.js'
+import { MessageProducerService } from './message-producer.service.js'
+import { NatsService } from './nats.service.js'
+import { RedisService } from './redis.service.js'
 
 /**
  * Messaging Module
